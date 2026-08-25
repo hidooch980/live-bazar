@@ -1,0 +1,100 @@
+name: Price Health & Static Snapshot
+
+# NOT a real-time backend (MASTER PROMPT §35).
+# Periodically verifies that keyless public providers are healthy and
+# refreshes the static fallback snapshot data/latest.json.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: CoinGecko health
+        id: coingecko
+        run: |
+          code=$(curl -s -o /tmp/cg.json -w '%{http_code}' \
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true")
+          echo "status=$code" >> "$GITHUB_OUTPUT"
+          test "$code" = "200"
+
+      - name: ExchangeRate-API health
+        id: erapi
+        run: |
+          code=$(curl -s -o /tmp/fx.json -w '%{http_code}' \
+            "https://open.er-api.com/v6/latest/USD")
+          echo "status=$code" >> "$GITHUB_OUTPUT"
+          test "$code" = "200"
+
+      - name: Build static snapshot (fallback only)
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json, datetime, pathlib
+
+          cg = json.load(open('/tmp/cg.json'))
+          fx = json.load(open('/tmp/fx.json'))
+          now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+          quotes = {}
+
+          coin_map = {'bitcoin':'btc_usd','ethereum':'eth_usd','tether':'usdt_usd'}
+          names = {'btc_usd':('BTC/USD','Bitcoin','بیت‌کوین'),
+                   'eth_usd':('ETH/USD','Ethereum','اتریوم'),
+                   'usdt_usd':('USDT/USD','Tether','تتر')}
+          for k, aid in coin_map.items():
+              if k in cg and 'usd' in cg[k]:
+                  s, n, nf = names[aid]
+                  quotes[aid] = {
+                      'id': aid, 'symbol': s, 'name': n, 'nameFa': nf,
+                      'category': 'crypto',
+                      'price': cg[k]['usd'],
+                      'changePercent': cg[k].get('usd_24h_change', 0),
+                      'unit': '', 'currency': 'USD',
+                      'timestamp': now, 'source': 'CoinGecko',
+                      'status': 'LIVE', 'confidence': 1.0,
+                  }
+
+          rates = fx.get('rates', {})
+          ts = datetime.datetime.fromtimestamp(
+              fx.get('time_last_update_unix', 0), datetime.timezone.utc
+          ).strftime('%Y-%m-%dT%H:%M:%SZ') if fx.get('time_last_update_unix') else now
+          for code in ['EUR','GBP','AED','TRY','CNY','CAD','AUD','CHF','JPY']:
+              if code in rates and rates[code]:
+                  aid = f'fx_{code.lower()}'
+                  quotes[aid] = {
+                      'id': aid, 'symbol': code,
+                      'category': 'currency',
+                      'price': round(1.0 / rates[code], 8),
+                      'unit': '', 'currency': code,
+                      'timestamp': ts, 'source': 'ExchangeRate-API',
+                      'status': 'LIVE', 'confidence': 1.0,
+                  }
+
+          snap = {
+              'timestamp': now,
+              'source': 'github-actions-static-snapshot',
+              'status': 'SNAPSHOT',
+              'quotes': quotes,
+          }
+          p = pathlib.Path('data/latest.json')
+          p.parent.mkdir(parents=True, exist_ok=True)
+          p.write_text(json.dumps(snap, ensure_ascii=False, indent=2))
+          print(f'wrote {len(quotes)} quotes')
+          PY
+
+      - name: Commit snapshot
+        run: |
+          git config user.name "molido-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/latest.json || true
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore(data): refresh static snapshot [skip ci]"
+          git push

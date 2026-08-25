@@ -1,0 +1,43 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze & Test (gate)
+        run: |
+          flutter analyze --fatal-infos
+          flutter test
+
+      - name: Build APK (release, debug-signed)
+        run: flutter build apk --release
+
+      - name: Rename artifact
+        run: mv build/app/outputs/flutter-apk/app-release.apk molido-market-${{ github.ref_name }}.apk
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: molido-market-*.apk
+          generate_release_notes: true
