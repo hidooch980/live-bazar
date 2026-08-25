@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/molido_app.dart';
+import '../core/network/http_config.dart';
 import '../data/cache/hive_market_cache.dart';
 import '../data/cache/local_state_store.dart';
 import '../services/alert_service.dart';
@@ -25,6 +26,9 @@ Future<void> main() async {
   final cache = await HiveMarketCache.open();
   final store = await HiveKeyValueStore.open();
 
+  // 1b) Outbound HTTP layer (user proxy config, LOCAL-ONLY).
+  await MarketHttp.instance.load(store);
+
   // 2) Local feature services (watchlist §22, alerts §23, portfolio §24).
   final watchlist = WatchlistService(store);
   final portfolio = PortfolioService(store);
@@ -38,6 +42,8 @@ Future<void> main() async {
   // 3) THE single market engine (§4) with the centralized 5s cycle.
   final engine = MarketRefreshEngine(registry: buildRegistry(), cache: cache);
   await engine.hydrateFromCache();
+  // First data on the very first frame (loading UI if slow).
+  await engine.refresh(force: true);
   engine.start();
 
   // 4) Local notifications for price alerts (§23) — uses the tz clock.

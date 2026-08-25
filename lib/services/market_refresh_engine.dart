@@ -42,7 +42,6 @@ class MarketRefreshEngine {
 
   Timer? _timer;
   bool _running = false;
-  bool _offlineMode = false;
 
   MarketSnapshot? _latest;
 
@@ -54,6 +53,11 @@ class MarketRefreshEngine {
   /// provider id -> next allowed fetch time (rate-limit bookkeeping).
   @visibleForTesting
   final Map<String, DateTime> nextAllowedFetch = {};
+
+  /// Live diagnostics for the settings/dashboard UI:
+  /// provider id -> ('ok'|'failed'|'empty'|'-') + last attempt time.
+  final Map<String, String> providerStatus = {};
+  DateTime? lastCycleAt;
 
   /// Starts the centralized cycle. Safe to call multiple times.
   void start() {
@@ -81,12 +85,12 @@ class MarketRefreshEngine {
 
   /// Network restored -> immediate refresh (§6).
   Future<void> onNetworkRestored() async {
-    _offlineMode = false;
     await refresh(force: true);
   }
 
   void markOffline() {
-    _offlineMode = true;
+    // Informational only: providers fail gracefully; the cycle keeps
+    // running so recovery is automatic and cache stays fresh.
   }
 
   /// One guarded market check across all due providers.
@@ -94,8 +98,6 @@ class MarketRefreshEngine {
   /// Returns the new snapshot or null when skipped/locked.
   Future<MarketSnapshot?> refresh({bool force = false}) {
     return _lock.run<MarketSnapshot?>('market-refresh', () async {
-      // Known-offline: skip network churn unless forced.
-      if (_offlineMode && !force) return null;
       final t0 = DateTime.now();
       final merged = Map<String, PriceQuote>.from(_latest?.quotes ?? {});
       final sourceStatus = <String, String>{};
@@ -115,12 +117,14 @@ class MarketRefreshEngine {
 
         futures.add(
           _lock.run<bool>('provider:${provider.id}', () async {
+            providerStatus[provider.id] = 'checking';
             final result = await provider.getLatestPrices(
               provider.supportedAssets,
             );
             if (result.isSuccess && result.quotes.isNotEmpty) {
               anySuccess = true;
               sourceStatus[provider.id] = 'ok';
+              providerStatus[provider.id] = 'ok';
               for (final q in result.quotes) {
                 final verdict = _validation.validate(q);
                 if (!verdict.isValid) {
@@ -132,11 +136,13 @@ class MarketRefreshEngine {
             } else if (!result.isSuccess) {
               anyFailure = true;
               sourceStatus[provider.id] = 'failed';
+              providerStatus[provider.id] = 'failed: ${result.error!.message}';
               debugPrint(
                 '[engine] provider ${provider.id} failed: ${result.error!.message}',
               );
             } else {
               sourceStatus[provider.id] = 'empty';
+              providerStatus[provider.id] = 'empty';
             }
             return true;
           }),
@@ -146,6 +152,7 @@ class MarketRefreshEngine {
       // Nothing fetched this tick (all providers within their window)?
       if (futures.isEmpty) return null;
       await Future.wait(futures);
+      lastCycleAt = _now();
 
       final latency = DateTime.now().difference(t0).inMilliseconds;
       final snapshot = MarketSnapshot(
@@ -161,9 +168,9 @@ class MarketRefreshEngine {
       }
       await _store.saveSnapshot(_latest!);
 
-      if (_controller.hasListener) {
-        _controller.add(_latest!);
-      }
+      // Broadcast unconditionally: with no listeners the event is simply
+      // dropped, and late subscribers re-read [latest] anyway.
+      _controller.add(_latest!);
       return _latest;
     });
   }

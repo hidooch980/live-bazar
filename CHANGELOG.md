@@ -4,6 +4,25 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [0.1.1] — 2026-08-25
+
+### Fixed
+- **No live data on restricted networks (IR):** providers now use
+  IRAN-ACCESSIBLE multi-endpoint failover chains:
+  - Crypto: CoinGecko → CoinPaprika → CoinLore → Nobitex (USDT pairs)
+  - FX: ExchangeRate-API → jsDelivr currency-api → Frankfurter (ECB)
+- Engine no longer gates the polling cycle on connectivity state; failed
+  cycles self-heal and cached data is always refreshed on recovery.
+- Snapshot events broadcast unconditionally; first fetch now happens at
+  startup BEFORE the first frame.
+
+### Added
+- In-app outbound HTTP proxy settings (host/port, optional auth) —
+  LOCAL-ONLY, applied to every provider client.
+- «وضعیت منابع» diagnostics card on Home: per-provider ok/failed/error text.
+- Vazirmatn font bundled (Regular→ExtraBold) for proper Persian typography.
+- Custom MOLIDO launcher icon (adaptive + legacy, all densities).
+
 ## [0.1.0] — 2026-08-25
 
 ### Added

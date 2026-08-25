@@ -5,7 +5,6 @@ import '../data/cache/market_cache.dart';
 import '../domain/entities/alert_rule.dart';
 import '../domain/entities/price_quote.dart';
 import '../providers/adapters/crypto_provider.dart';
-import '../providers/adapters/frankfurter_fallback_provider.dart';
 import '../providers/adapters/global_currency_provider.dart';
 import '../providers/adapters/server_required_provider.dart';
 import '../providers/provider_registry.dart';
@@ -69,15 +68,11 @@ enum ConnectionMode { online, offline }
 
 ProviderRegistry buildRegistry() {
   final registry = ProviderRegistry();
-  // Priority 1: primary sources (verified, keyless).
+  // Priority 1: primary chains (verified, keyless, multi-endpoint failover).
   registry.register(
     ProviderEntry(provider: GlobalCurrencyProvider(), priority: 1),
   );
   registry.register(ProviderEntry(provider: CryptoProvider(), priority: 1));
-  // Priority 2: fallbacks.
-  registry.register(
-    ProviderEntry(provider: FrankfurterFallbackProvider(), priority: 2),
-  );
   // Disabled in V1 (SERVER_REQUIRED).
   registry.register(
     ProviderEntry(
