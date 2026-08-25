@@ -30,9 +30,9 @@ jobs:
         run: flutter pub get
 
       - name: Restore release keystore (free self-signed cert)
-        if: ${{ secrets.KEYSTORE_SECRET != '' }}
         env:
           KEYSTORE_SECRET: ${{ secrets.KEYSTORE_SECRET }}
+        if: env.KEYSTORE_SECRET != ''
         shell: python
         run: |
           import base64, os

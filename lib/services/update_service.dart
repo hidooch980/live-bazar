@@ -80,8 +80,9 @@ class UpdateService {
         options: Options(headers: {'Accept': 'application/vnd.github+json'}),
       );
       final body = res.data;
-      if (body == null)
+      if (body == null) {
         return UpdateCheckResult(currentVersion: currentVersion);
+      }
       final tag = body['tag_name'] as String?;
       final notes = body['body'] as String?;
       String? apkUrl;
