@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/network/http_config.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
+import '../update/update_flow.dart';
 
 /// SETTINGS (§28, §34): privacy-first, local-only.
 class SettingsScreen extends ConsumerWidget {
@@ -70,6 +71,13 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(
               'هر منبع با فاصله مجاز خودش فراخوانی می‌شود؛ هیچ درخواست تکراری یا موازی ارسال نمی‌شود.',
             ),
+          ),
+          const _Header('بروزرسانی برنامه'),
+          ListTile(
+            leading: const Icon(Icons.system_update),
+            title: const Text('بررسی بروزرسانی (از GitHub Releases)'),
+            subtitle: const Text('دانلود و نصب فقط با تأیید شما انجام می‌شود'),
+            onTap: () => runUpdateFlow(context, ref),
           ),
         ],
       ),

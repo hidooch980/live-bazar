@@ -29,6 +29,33 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Restore release keystore (free self-signed cert)
+        if: ${{ secrets.KEYSTORE_SECRET != '' }}
+        env:
+          KEYSTORE_SECRET: ${{ secrets.KEYSTORE_SECRET }}
+        shell: python
+        run: |
+          import base64, os
+          secret = os.environ['KEYSTORE_SECRET']
+          data = base64.b64decode(secret)
+          iv, body = data[:16], data[16:]
+          from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+          from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+          from cryptography.hazmat.primitives import hashes, padding
+          kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=b'MolidoMarket2026', iterations=100000)
+          key = kdf.derive(secret.encode())
+          dec = Cipher(algorithms.AES(key), modes.CBC(iv)).decryptor()
+          padded = dec.update(body) + dec.finalize()
+          unpadder = padding.PKCS7(128).unpadder()
+          jks = unpadder.update(padded) + unpadder.finalize()
+          os.makedirs('android/keystore', exist_ok=True)
+          open('android/keystore/molido-release.p12', 'wb').write(jks)
+          with open('android/key.properties', 'w') as f:
+              f.write('storeFile=../keystore/molido-release.p12\n')
+              f.write('storePassword=' + secret + '\n')
+              f.write('keyAlias=molido\n')
+              f.write('keyPassword=' + secret + '\n')
+
       - name: Analyze & Test (gate)
         run: |
           flutter analyze --fatal-infos

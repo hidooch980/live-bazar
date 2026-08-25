@@ -7,6 +7,7 @@ import '../features/charts/charts_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/market/market_screen.dart';
 import '../features/settings/settings_screen.dart';
+import '../features/update/update_flow.dart';
 import '../state/app_providers.dart';
 import 'theme.dart';
 
@@ -36,6 +37,15 @@ class _MolidoAppState extends ConsumerState<MolidoApp>
     // Foreground start: immediate refresh + begin the 5s cycle.
     Future<void>.microtask(() async {
       await ref.read(refreshEngineProvider).onForegroundChanged(true);
+    });
+    // Auto-update check (GitHub Releases) — once per session, delayed so
+    // the market UI comes first.
+    Future<void>.delayed(const Duration(seconds: 8), () async {
+      if (!mounted) return;
+      final check = await ref.read(updateCheckProvider.future);
+      if (check.hasUpdate && mounted) {
+        await runUpdateFlow(context, ref, precheck: check);
+      }
     });
   }
 

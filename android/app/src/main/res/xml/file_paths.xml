@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Update APKs are downloaded into the app cache dir. -->
+    <cache-path name="updates" path="molido_update/"/>
+    <files-path name="updates_files" path="molido_update/"/>
+</paths>

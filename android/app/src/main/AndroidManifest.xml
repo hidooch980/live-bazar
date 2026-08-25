@@ -2,6 +2,8 @@
     <!-- Market data providers are plain HTTPS APIs (no backend). -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- GitHub-only in-app updates: install downloaded release APK. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
         android:label="بازار مولیدو"
         android:name="${applicationName}"
@@ -34,6 +36,17 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+
+    <!-- FileProvider: shares the downloaded update APK with the installer. -->
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.fileProvider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths"/>
+    </provider>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

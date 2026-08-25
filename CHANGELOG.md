@@ -4,6 +4,24 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [0.1.2] — 2026-08-25
+
+### Added
+- **In-app auto-update (GitHub-only):** checks the latest GitHub Release
+  on startup (once per session), shows a Persian confirm dialog, downloads
+  the APK with progress, and hands it to the Android installer.
+  Manual check lives in Settings → «بروزرسانی برنامه».
+- `REQUEST_INSTALL_PACKAGES` permission + FileProvider wiring for the
+  downloaded APK handoff.
+- **Free self-signed release certificate:** 30-year PKCS12 keystore,
+  committed ENCRYPTED (AES-256/PBKDF2). CI decrypts it from the
+  `KEYSTORE_SECRET` repository secret and signs release APKs; local builds
+  use the gitignored `android/key.properties`. Debug-signed fallback when
+  the secret is absent.
+
+### Changed
+- pubspec version aligned with git tags (0.1.2+3 ↔ v0.1.2).
+
 ## [0.1.1] — 2026-08-25
 
 ### Fixed
