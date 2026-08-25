@@ -154,20 +154,20 @@ void main() {
 
     test('historical aggregator buckets observations (§19)', () {
       final t = DateTime.utc(2026, 8, 1, 10);
-      final quotes = <PriceQuote>[
-        _q('x', 1, ts: t),
-        _q('x', 2, ts: t.add(const Duration(seconds: 5))),
-        _q('x', 3, ts: t.add(const Duration(seconds: 9))),
-        _q('x', 4, ts: t.add(const Duration(seconds: 61))),
+      final points = <(DateTime, double)>[
+        (t, 1),
+        (t.add(const Duration(seconds: 5)), 2),
+        (t.add(const Duration(seconds: 9)), 3),
+        (t.add(const Duration(seconds: 61)), 4),
       ];
       final agg = HistoricalAggregator.aggregate(
-        quotes,
+        points,
         const Duration(minutes: 1),
       );
       // Bucket1 keeps LAST observation (price 3), bucket2 has price 4.
       expect(agg.length, 2);
-      expect(agg.first.price, 3);
-      expect(agg.last.price, 4);
+      expect(agg.first.$2, 3);
+      expect(agg.last.$2, 4);
     });
   });
 }

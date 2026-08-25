@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../services/timezone_service.dart';
+import '../../state/app_providers.dart';
 
 /// SETTINGS (§28, §34): privacy-first, local-only.
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final timeZone = ref.watch(timeZoneProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('تنظیمات')),
       body: ListView(
@@ -18,6 +22,14 @@ class SettingsScreen extends StatelessWidget {
             leading: Icon(Icons.storefront),
             title: Text('${AppConstants.appNameFa} — ${AppConstants.appName}'),
             subtitle: Text(AppConstants.taglineFa),
+          ),
+          const _Header('ساعت و منطقه زمانی'),
+          ListTile(
+            leading: const Icon(Icons.schedule),
+            title: const Text('منطقه زمانی پیش‌فرض'),
+            subtitle: Text(
+              '${timeZone.currentLocation} (UTC${timeZone.offsetLabel}) — ساعت محلی: ${_nowLabel(timeZone)}',
+            ),
           ),
           const _Header('حریم خصوصی'),
           const ListTile(
@@ -81,4 +93,11 @@ class _Header extends StatelessWidget {
       ),
     ),
   );
+}
+
+String _nowLabel(TimeZoneService tz) {
+  final now = tz.now();
+  final hh = now.hour.toString().padLeft(2, '0');
+  final mm = now.minute.toString().padLeft(2, '0');
+  return '$hh:$mm';
 }

@@ -8,6 +8,8 @@ import '../../domain/entities/price_quote.dart';
 import '../../services/market_pulse_service.dart';
 import '../../state/app_providers.dart';
 import '../../widgets/quote_tile.dart';
+import '../alerts/alerts_screen.dart';
+import '../portfolio/portfolio_screen.dart';
 
 /// HOME DASHBOARD (§30).
 class HomeScreen extends ConsumerWidget {
@@ -17,20 +19,44 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(marketControllerProvider);
     final snap = state.snapshot;
-    final quotes = AssetCatalog.all
-        .where((d) => d.enabled && snap!.quotes.containsKey(d.id))
-        .map((d) => snap!.quotes[d.id]!)
-        .toList();
+    final quotes = snap == null
+        ? const <PriceQuote>[]
+        : [
+            for (final d in AssetCatalog.all)
+              if (d.enabled && snap.quotes.containsKey(d.id))
+                snap.quotes[d.id]!,
+          ];
     final pulse = MarketPulse.compute(quotes);
+    final watchlistIds = ref.watch(watchlistControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('بازار مولیدو'),
         actions: [
           IconButton(
+            tooltip: 'پورتفولیو',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const PortfolioScreen())),
+          ),
+          IconButton(
+            tooltip: 'هشدارها',
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const AlertsScreen())),
+          ),
+          IconButton(
+            tooltip: 'به‌روزرسانی',
+            icon: state.refreshing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
             onPressed: () =>
                 ref.read(marketControllerProvider.notifier).refreshNow(),
-            icon: const Icon(Icons.refresh),
           ),
         ],
       ),
@@ -41,21 +67,35 @@ class HomeScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
           children: [
-            _ConnectionHeader(
-              offline: snap == null || quotes.isEmpty && state.refreshing,
-            ),
+            _ConnectionHeader(busy: state.refreshing),
             if (snap != null) ...[
-              _LastUpdate(timestamp: snap.timestamp, latencyMs: snap.latencyMs),
-              _PulseCard(pulse: pulse),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  'شاخص‌های اصلی',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                ),
+              _LastUpdate(
+                timestamp: _latestTimestamp(quotes),
+                latencyMs: snap.latencyMs,
               ),
+              _PulseCard(pulse: pulse),
+              if (watchlistIds.isNotEmpty) ...[
+                const _SectionTitle('علاقه‌مندی‌ها'),
+                for (final id in watchlistIds)
+                  if (snap.quotes[id] != null)
+                    QuoteTile(
+                      quote: snap.quotes[id]!,
+                      isFavorite: true,
+                      onToggleFavorite: () => ref
+                          .read(watchlistControllerProvider.notifier)
+                          .toggle(id),
+                    ),
+              ],
+              const _SectionTitle('شاخص‌های اصلی'),
               for (final id in ['fx_usd', 'fx_eur', 'btc_usd', 'usdt_usd'])
-                if (snap.quotes[id] != null) QuoteTile(quote: snap.quotes[id]!),
+                if (snap.quotes[id] != null)
+                  QuoteTile(
+                    quote: snap.quotes[id]!,
+                    isFavorite: ref.watch(watchlistProvider).contains(id),
+                    onToggleFavorite: () => ref
+                        .read(watchlistControllerProvider.notifier)
+                        .toggle(id),
+                  ),
               const _DisabledNotice(),
             ] else
               SizedBox(
@@ -80,12 +120,35 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+
+  DateTime? _latestTimestamp(List<PriceQuote> quotes) {
+    DateTime? t;
+    for (final q in quotes) {
+      if (t == null || q.timestamp.isAfter(t)) t = q.timestamp;
+    }
+    return t;
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: Text(
+      text,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+    ),
+  );
 }
 
 class _ConnectionHeader extends StatelessWidget {
-  const _ConnectionHeader({required this.offline});
+  const _ConnectionHeader({required this.busy});
 
-  final bool offline;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +163,7 @@ class _ConnectionHeader extends StatelessWidget {
         children: [
           Icon(
             Icons.bolt,
-            color: offline ? Colors.grey : AppTheme.green,
+            color: busy ? AppTheme.gold : AppTheme.green,
             size: 20,
           ),
           const SizedBox(width: 8),
@@ -112,15 +175,15 @@ class _ConnectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: (offline ? Colors.grey : AppTheme.green).withValues(
+              color: (busy ? AppTheme.gold : AppTheme.green).withValues(
                 alpha: 0.15,
               ),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              offline ? 'در انتظار' : 'آنلاین',
+              busy ? 'در حال بررسی' : 'آنلاین',
               style: TextStyle(
-                color: offline ? Colors.grey : AppTheme.green,
+                color: busy ? AppTheme.gold : AppTheme.green,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -135,12 +198,13 @@ class _ConnectionHeader extends StatelessWidget {
 class _LastUpdate extends StatelessWidget {
   const _LastUpdate({required this.timestamp, required this.latencyMs});
 
-  final DateTime timestamp;
+  final DateTime? timestamp;
   final int latencyMs;
 
   @override
   Widget build(BuildContext context) {
-    final local = timestamp.toLocal();
+    if (timestamp == null) return const SizedBox.shrink();
+    final local = timestamp!.toLocal();
     final hh = local.hour.toString().padLeft(2, '0').faString;
     final mm = local.minute.toString().padLeft(2, '0').faString;
     return Padding(

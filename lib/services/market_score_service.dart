@@ -65,36 +65,39 @@ enum Volatility { low, medium, high }
 /// into coarser buckets so storage stays bounded.
 class HistoricalAggregator {
   /// Keeps roughly one observation per [bucket] duration.
-  static List<PriceQuote> aggregate(
-    List<PriceQuote> orderedAsc,
+  ///
+  /// Input: ascending (timestamp, price) pairs. Output keeps the LAST
+  /// observation of each bucket.
+  static List<(DateTime, double)> aggregate(
+    List<(DateTime, double)> orderedAsc,
     Duration bucket,
   ) {
     if (orderedAsc.isEmpty) return const [];
-    final out = <PriceQuote>[];
+    final out = <(DateTime, double)>[];
     DateTime? bucketStart;
-    for (final q in orderedAsc) {
+    for (final (t, p) in orderedAsc) {
       final start = DateTime.fromMillisecondsSinceEpoch(
-        (q.timestamp.millisecondsSinceEpoch ~/ bucket.inMilliseconds) *
+        (t.millisecondsSinceEpoch ~/ bucket.inMilliseconds) *
             bucket.inMilliseconds,
         isUtc: true,
       );
       if (bucketStart == null || !start.isAtSameMomentAs(bucketStart)) {
         bucketStart = start;
-        out.add(q);
+        out.add((t, p));
       } else {
         // Same bucket: keep the LAST observation of the bucket.
-        out[out.length - 1] = q;
+        out[out.length - 1] = (t, p);
       }
     }
     return List.unmodifiable(out);
   }
 
-  static double volatilityPercent(List<PriceQuote> quotes) {
-    if (quotes.length < 2) return 0;
+  static double volatilityPercent(List<double> prices) {
+    if (prices.length < 2) return 0;
     final rets = <double>[];
-    for (var i = 1; i < quotes.length; i++) {
-      final p0 = quotes[i - 1].price;
-      if (p0 > 0) rets.add((quotes[i].price - p0) / p0);
+    for (var i = 1; i < prices.length; i++) {
+      final p0 = prices[i - 1];
+      if (p0 > 0) rets.add((prices[i] - p0) / p0);
     }
     if (rets.isEmpty) return 0;
     final mean = rets.reduce((a, b) => a + b) / rets.length;

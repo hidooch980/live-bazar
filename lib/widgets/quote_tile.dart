@@ -6,10 +6,18 @@ import '../domain/entities/price_quote.dart';
 
 /// Compact row used across Home & Market screens.
 class QuoteTile extends StatelessWidget {
-  const QuoteTile({super.key, required this.quote, this.onTap});
+  const QuoteTile({
+    super.key,
+    required this.quote,
+    this.onTap,
+    this.isFavorite,
+    this.onToggleFavorite,
+  });
 
   final PriceQuote quote;
   final VoidCallback? onTap;
+  final bool? isFavorite;
+  final VoidCallback? onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +26,28 @@ class QuoteTile extends StatelessWidget {
     return Card(
       child: ListTile(
         onTap: onTap,
-        title: Text(
-          quote.nameFa,
-          style: const TextStyle(fontWeight: FontWeight.w700),
+        title: Row(
+          children: [
+            if (onToggleFavorite != null && isFavorite != null)
+              GestureDetector(
+                onTap: onToggleFavorite,
+                child: Icon(
+                  isFavorite! ? Icons.star : Icons.star_border,
+                  size: 20,
+                  color: isFavorite!
+                      ? AppTheme.gold
+                      : Theme.of(context).hintColor,
+                ),
+              ),
+            if (onToggleFavorite != null && isFavorite != null)
+              const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                quote.nameFa,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         ),
         subtitle: Row(
           children: [

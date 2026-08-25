@@ -6,7 +6,7 @@ import '../../domain/entities/price_quote.dart';
 import '../../state/app_providers.dart';
 import '../../widgets/quote_tile.dart';
 
-/// MARKET screen (§31): tabs + search + sort.
+/// MARKET screen (§31): tabs + search + sort + favorites.
 class MarketScreen extends ConsumerStatefulWidget {
   const MarketScreen({super.key});
 
@@ -18,6 +18,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   AssetCategory? _tab;
   String _query = '';
   bool _sortByChange = true;
+  bool _favoritesOnly = false;
 
   static const _tabs = <(AssetCategory?, String)>[
     (null, 'همه'),
@@ -31,12 +32,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(marketControllerProvider);
+    final watchIds = ref.watch(watchlistProvider).ids;
     final snap = state.snapshot;
 
     final items = <PriceQuote>[];
     if (snap != null) {
       for (final def in AssetCatalog.all) {
         if (_tab != null && def.category != _tab) continue;
+        if (_favoritesOnly && !watchIds.contains(def.id)) continue;
         if (_query.isNotEmpty &&
             !def.nameFa.contains(_query) &&
             !def.symbol.toLowerCase().contains(_query.toLowerCase())) {
@@ -46,7 +49,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         if (q != null && q.status.isDisplayable) {
           items.add(q);
         } else if (!def.enabled) {
-          // Disabled asset: show honest unavailable placeholder.
+          // Disabled asset: honest unavailable placeholder — never fake data.
           items.add(
             PriceQuote(
               id: def.id,
@@ -57,7 +60,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               price: 0,
               unit: def.unit,
               currency: def.currency,
-              timestamp: snap.timestamp,
+              timestamp: DateTime.now().toUtc(),
               source: '—',
               status: QuoteStatus.unavailable,
             ),
@@ -75,6 +78,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       appBar: AppBar(
         title: const Text('بازار'),
         actions: [
+          IconButton(
+            tooltip: 'فقط علاقه‌مندی‌ها',
+            onPressed: () => setState(() => _favoritesOnly = !_favoritesOnly),
+            icon: Icon(_favoritesOnly ? Icons.star : Icons.star_border),
+          ),
           IconButton(
             tooltip: 'مرتب‌سازی بر اساس بیشترین تغییر',
             onPressed: () => setState(() => _sortByChange = !_sortByChange),
@@ -116,7 +124,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           ),
           Expanded(
             child: items.isEmpty
-                ? const Center(child: Text('داده‌ای برای نمایش نیست'))
+                ? Center(
+                    child: Text(
+                      _favoritesOnly
+                          ? 'علاقه‌مندی‌ای اضافه نشده است'
+                          : 'داده‌ای برای نمایش نیست',
+                    ),
+                  )
                 : RefreshIndicator(
                     onRefresh: () => ref
                         .read(marketControllerProvider.notifier)
@@ -124,7 +138,22 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: ListView.builder(
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: items.length,
-                      itemBuilder: (_, i) => QuoteTile(quote: items[i]),
+                      itemBuilder: (_, i) {
+                        final q = items[i];
+                        final canFavorite =
+                            AssetCatalog.byId(q.id)?.enabled ?? false;
+                        return QuoteTile(
+                          quote: q,
+                          isFavorite: canFavorite
+                              ? watchIds.contains(q.id)
+                              : null,
+                          onToggleFavorite: canFavorite
+                              ? () => ref
+                                    .read(watchlistControllerProvider.notifier)
+                                    .toggle(q.id)
+                              : null,
+                        );
+                      },
                     ),
                   ),
           ),
