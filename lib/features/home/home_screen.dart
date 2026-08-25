@@ -74,6 +74,9 @@ class HomeScreen extends ConsumerWidget {
                 latencyMs: snap.latencyMs,
               ),
               _PulseCard(pulse: pulse),
+              _ProviderDiagnostics(
+                status: Map.of(ref.watch(refreshEngineProvider).providerStatus),
+              ),
               if (watchlistIds.isNotEmpty) ...[
                 const _SectionTitle('علاقه‌مندی‌ها'),
                 for (final id in watchlistIds)
@@ -143,6 +146,68 @@ class _SectionTitle extends StatelessWidget {
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
     ),
   );
+}
+
+/// Live per-source status so users can SEE why data is (not) flowing.
+class _ProviderDiagnostics extends StatelessWidget {
+  const _ProviderDiagnostics({required this.status});
+
+  final Map<String, String> status;
+
+  @override
+  Widget build(BuildContext context) {
+    if (status.isEmpty) return const SizedBox.shrink();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'وضعیت منابع',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            for (final e in status.entries)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Icon(
+                      e.value == 'ok'
+                          ? Icons.check_circle
+                          : e.value.startsWith('failed')
+                          ? Icons.error_outline
+                          : Icons.hourglass_top,
+                      size: 15,
+                      color: e.value == 'ok'
+                          ? AppTheme.green
+                          : e.value.startsWith('failed')
+                          ? AppTheme.red
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(e.key, style: const TextStyle(fontSize: 12)),
+                    const Spacer(),
+                    Flexible(
+                      child: Text(
+                        e.value,
+                        textAlign: TextAlign.end,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ConnectionHeader extends StatelessWidget {

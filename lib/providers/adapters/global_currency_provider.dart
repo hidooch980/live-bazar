@@ -2,31 +2,25 @@ import 'package:dio/dio.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/errors/app_exception.dart';
+import '../../core/network/http_config.dart';
 import '../../config/asset_catalog.dart';
 import '../../domain/entities/price_quote.dart';
 import '../iprice_provider.dart';
 
-/// Verified primary source: https://open.er-api.com/v6/latest/USD
-/// (ExchangeRate-API open endpoint — public, keyless, documented.)
+/// Global FX quotes with an IRAN-ACCESSIBLE FAILOVER CHAIN (all keyless):
 ///
-/// Rates are relative to USD; cross rates are derived: EUR/USD = 1/EUR.
-/// The provider publishes a daily epoch (time_last_update_unix); the app
-/// keeps checking every 5s but data stays valid until the epoch advances.
+/// 1. ExchangeRate-API (open.er-api.com) — daily epoch, global default
+/// 2. jsDelivr currency-api (@fawazahmed0) — CDN, usually reachable in IR
+/// 3. Frankfurter (ECB) — European reference rates
+///
+/// All quotes are USD-terms cross rates derived from REAL published rates.
 class GlobalCurrencyProvider implements IPriceProvider {
   GlobalCurrencyProvider({Dio? dio})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: AppConstants.requestTimeout,
-              receiveTimeout: AppConstants.requestTimeout,
-            ),
-          );
+    : _dio = dio ?? MarketHttp.instance.createClient();
 
-  static const _endpoint = 'https://open.er-api.com/v6/latest/USD';
+  final Dio _dio;
 
-  /// asset id -> ISO code served by this provider.
-  static const _map = <String, String>{
+  static const _codes = <String, String>{
     'fx_usd': 'USD',
     'fx_eur': 'EUR',
     'fx_gbp': 'GBP',
@@ -39,116 +33,225 @@ class GlobalCurrencyProvider implements IPriceProvider {
     'fx_jpy': 'JPY',
   };
 
-  final Dio _dio;
+  @override
+  String get id => 'fx-chain';
 
   @override
-  String get id => 'erapi';
-
-  @override
-  String get displayName => 'ExchangeRate-API';
+  String get displayName => 'FX';
 
   @override
   Duration get minRefreshInterval => AppConstants.globalCurrencyMinInterval;
 
   @override
-  Set<String> get supportedAssets => _map.keys.toSet();
+  Set<String> get supportedAssets => _codes.keys.toSet();
 
   @override
   bool get isEnabled => true;
 
+  String? _lastSource;
+  String get activeSource => _lastSource ?? '-';
+
+  @override
+  Future<bool> healthCheck() async => true;
+
   @override
   Future<ProviderResult> getLatestPrices(Set<String> assetIds) async {
-    try {
-      final res = await _dio.get<Map<dynamic, dynamic>>(_endpoint);
-      final body = res.data;
-      if (body == null) {
-        return ProviderResult(
-          quotes: [],
-          error: const AppException(AppErrorCode.invalidData, 'Empty body'),
-        );
-      }
-      final ratesRaw = body['rates'];
-      if (ratesRaw is! Map) {
-        return ProviderResult(
-          quotes: [],
-          error: const AppException(AppErrorCode.invalidData, 'Missing rates'),
-        );
-      }
-      final rates = Map<String, dynamic>.from(ratesRaw);
-      final usdPerUnit = <String, double>{};
-      rates.forEach((k, v) {
-        final r = (v as num?)?.toDouble();
-        if (r != null && r > 0) usdPerUnit[k] = r;
-      });
+    final attempts = <String, Future<ProviderResult> Function()>{
+      'ExchangeRate-API': () => _fromErApi(assetIds),
+      'jsDelivr-FX': () => _fromJsDelivr(assetIds),
+      'Frankfurter': () => _fromFrankfurter(assetIds),
+    };
 
-      final epochUnix = (body['time_last_update_unix'] as num?)?.toInt();
-      // Real provider publication time (falls back to response date).
+    Object? lastError;
+    for (final e in attempts.entries) {
+      final r = await e.value();
+      if (r.isSuccess && r.quotes.isNotEmpty) {
+        _lastSource = e.key;
+        return r;
+      }
+      lastError = r.error;
+    }
+    return ProviderResult(
+      quotes: [],
+      error: lastError is AppException
+          ? lastError
+          : const AppException(AppErrorCode.network, 'all fx endpoints failed'),
+    );
+  }
+
+  // ---- 1) open.er-api.com -------------------------------------------
+  Future<ProviderResult> _fromErApi(Set<String> assetIds) async {
+    try {
+      final res = await _dio.get<Map<dynamic, dynamic>>(
+        'https://open.er-api.com/v6/latest/USD',
+      );
+      final body = res.data;
+      final ratesRaw = body?['rates'];
+      if (ratesRaw is! Map) return _bad('er-api missing rates');
+      final rates = Map<String, dynamic>.from(ratesRaw);
+      final epochUnix = (body?['time_last_update_unix'] as num?)?.toInt();
       var ts = epochUnix == null
           ? (_serverTime(res) ?? DateTime.now().toUtc())
           : DateTime.fromMillisecondsSinceEpoch(epochUnix * 1000, isUtc: true);
-
-      final quotes = <PriceQuote>[];
-      for (final entry in _map.entries) {
-        if (!assetIds.contains(entry.key)) continue;
-        final code = entry.value;
-        double? price;
-        if (code == 'USD') {
-          price = 1.0;
-        } else if (code == 'IRR') {
-          price = usdPerUnit['IRR'];
-        } else if (usdPerUnit.containsKey(code) && usdPerUnit[code]! > 0) {
-          // units of USD per 1 unit of code
-          price = 1 / usdPerUnit[code]!;
-        } else {
-          ts = ts;
-        }
-        if (price == null || price <= 0) continue;
-        final def = AssetCatalog.byId(entry.key)!;
-        quotes.add(
-          PriceQuote(
-            id: def.id,
-            symbol: def.symbol,
-            name: def.name,
-            nameFa: def.nameFa,
-            category: def.category,
-            price: price,
-            unit: def.unit,
-            currency: def.currency,
-            timestamp: ts,
-            source: displayName,
-            status: QuoteStatus.live,
-          ),
-        );
-      }
-      return ProviderResult(quotes: quotes);
+      // rates: units of X per 1 USD -> invert for USD-per-X.
+      final usdPerUnit = <String, double>{};
+      rates.forEach((k, v) {
+        final r = (v as num?)?.toDouble();
+        if (r != null && r > 0) usdPerUnit[k.toUpperCase()] = 1 / r;
+      });
+      usdPerUnit['USD'] = 1.0;
+      return _build(
+        usdPerUnit,
+        assetIds,
+        ts,
+        'ExchangeRate-API',
+        QuoteStatus.live,
+        1.0,
+      );
     } on DioException catch (e) {
+      return _err('er-api', e);
+    } catch (e) {
+      return _err('er-api', e);
+    }
+  }
+
+  // ---- 2) jsDelivr @fawazahmed0 currency-api -------------------------
+  Future<ProviderResult> _fromJsDelivr(Set<String> assetIds) async {
+    try {
+      final res = await _dio.get<Map<dynamic, dynamic>>(
+        'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+      );
+      final body = res.data;
+      final ratesRaw = body?['usd'];
+      if (ratesRaw is! Map) return _bad('jsdelivr missing usd map');
+      final rates = Map<String, dynamic>.from(ratesRaw);
+      final dateStr = body?['date'];
+      var ts = _serverTime(res) ?? DateTime.now().toUtc();
+      if (dateStr is String) {
+        ts = DateTime.tryParse(dateStr)?.toUtc() ?? ts;
+      }
+      // rates: units of X per 1 USD -> invert for USD-per-X.
+      final usdPerUnit = <String, double>{};
+      rates.forEach((k, v) {
+        final r = (v as num?)?.toDouble();
+        if (r != null && r > 0) usdPerUnit[k.toUpperCase()] = 1 / r;
+      });
+      return _build(
+        usdPerUnit,
+        assetIds,
+        ts,
+        'jsDelivr-FX',
+        QuoteStatus.live,
+        0.95,
+      );
+    } on DioException catch (e) {
+      return _err('jsdelivr', e);
+    } catch (e) {
+      return _err('jsdelivr', e);
+    }
+  }
+
+  // ---- 3) frankfurter.dev (ECB) --------------------------------------
+  Future<ProviderResult> _fromFrankfurter(Set<String> assetIds) async {
+    try {
+      final res = await _dio.get<Map<dynamic, dynamic>>(
+        'https://api.frankfurter.dev/v1/latest',
+        queryParameters: {'base': 'USD'},
+      );
+      final body = res.data;
+      final ratesRaw = body?['rates'];
+      if (ratesRaw is! Map) return _bad('frankfurter missing rates');
+      final rates = Map<String, dynamic>.from(ratesRaw);
+      final dateStr = body?['date'];
+      var ts = _serverTime(res) ?? DateTime.now().toUtc();
+      if (dateStr is String) {
+        ts = DateTime.tryParse(dateStr)?.toUtc() ?? ts;
+      }
+      final usdPerUnit = <String, double>{};
+      rates.forEach((k, v) {
+        final r = (v as num?)?.toDouble();
+        if (r != null && r > 0) usdPerUnit[k.toUpperCase()] = 1 / r;
+      });
+      return _build(
+        usdPerUnit,
+        assetIds,
+        ts,
+        'Frankfurter',
+        QuoteStatus.fallback,
+        0.9,
+      );
+    } on DioException catch (e) {
+      return _err('frankfurter', e);
+    } catch (e) {
+      return _err('frankfurter', e);
+    }
+  }
+
+  // ---- shared builder -------------------------------------------------
+  ProviderResult _build(
+    Map<String, double> usdPerUnit,
+    Set<String> assetIds,
+    DateTime ts,
+    String source,
+    QuoteStatus status,
+    double confidence,
+  ) {
+    final quotes = <PriceQuote>[];
+    for (final entry in _codes.entries) {
+      if (!assetIds.contains(entry.key)) continue;
+      final code = entry.value;
+      double? price;
+      if (code == 'USD') {
+        price = 1.0;
+      } else {
+        price = usdPerUnit[code];
+      }
+      if (price == null || price <= 0) continue;
+      final def = AssetCatalog.byId(entry.key)!;
+      quotes.add(
+        PriceQuote(
+          id: def.id,
+          symbol: def.symbol,
+          name: def.name,
+          nameFa: def.nameFa,
+          category: def.category,
+          price: price,
+          unit: def.unit,
+          currency: def.currency,
+          timestamp: ts,
+          source: source,
+          status: status,
+          confidence: confidence,
+        ),
+      );
+    }
+    if (quotes.isEmpty) {
       return ProviderResult(
         quotes: [],
         error: AppException(
-          e.response?.statusCode == 429
-              ? AppErrorCode.rateLimited
-              : AppErrorCode.network,
-          'ExchangeRate-API request failed',
-          cause: e,
+          AppErrorCode.invalidData,
+          '$source: no usable rates',
         ),
       );
-    } catch (e) {
-      return ProviderResult(
-        quotes: [],
-        error: AppException(AppErrorCode.unknown, 'Unexpected', cause: e),
-      );
     }
+    return ProviderResult(quotes: quotes);
   }
 
-  @override
-  Future<bool> healthCheck() async {
-    try {
-      final res = await _dio.get<Map<dynamic, dynamic>>(_endpoint);
-      return res.statusCode == 200;
-    } catch (_) {
-      return false;
-    }
-  }
+  ProviderResult _bad(String msg) => ProviderResult(
+    quotes: [],
+    error: AppException(AppErrorCode.invalidData, msg),
+  );
+
+  ProviderResult _err(String src, Object e) => ProviderResult(
+    quotes: [],
+    error: AppException(
+      e is DioException && e.response?.statusCode == 429
+          ? AppErrorCode.rateLimited
+          : AppErrorCode.network,
+      '$src failed',
+      cause: e,
+    ),
+  );
 
   DateTime? _serverTime(Response<dynamic> res) =>
       DateTime.tryParse(res.headers.value('date') ?? '')?.toUtc();
