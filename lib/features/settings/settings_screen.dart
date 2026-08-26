@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/network/http_config.dart';
+import '../../services/backup_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
 import '../update/update_flow.dart';
@@ -71,6 +72,42 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(
               'هر منبع با فاصله مجاز خودش فراخوانی می‌شود؛ هیچ درخواست تکراری یا موازی ارسال نمی‌شود.',
             ),
+          ),
+          const _Header('نمایش قیمت'),
+          SwitchListTile(
+            secondary: const Icon(Icons.currency_exchange),
+            title: const Text('نمایش قیمت‌ها به تومان'),
+            subtitle: const Text(
+              'تبدیل زنده با نرخ رسمی USD/IRR از منابع — بدون داده جعلی',
+            ),
+            value: ref.watch(tomanModeProvider),
+            onChanged: (v) => ref.read(tomanModeProvider.notifier).set(v),
+          ),
+          const _Header('پشتیبان‌گیری (کاملاً محلی)'),
+          ListTile(
+            leading: const Icon(Icons.ios_share),
+            title: const Text('خروجی پشتیبان (فایل JSON)'),
+            subtitle: const Text('علاقه‌مندی‌ها + پورتفولیو + هشدارها'),
+            onTap: () async {
+              final ok = await ref.read(backupServiceProvider).shareExport();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'فایل پشتیبان ساخته شد — آن را ذخیره کنید'
+                          : 'اشتراک‌گذاری در دسترس نیست',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.restore),
+            title: const Text('بازیابی از متن JSON'),
+            subtitle: const Text('محتوای فایل پشتیبان را اینجا بچسبانید'),
+            onTap: () => _restoreDialog(context, ref),
           ),
           const _Header('بروزرسانی برنامه'),
           ListTile(
@@ -221,4 +258,61 @@ String _nowLabel(TimeZoneService tz) {
   final hh = now.hour.toString().padLeft(2, '0');
   final mm = now.minute.toString().padLeft(2, '0');
   return '$hh:$mm';
+}
+
+final backupServiceProvider = Provider<BackupService>(
+  (ref) => BackupService(ref.watch(localStoreProvider)),
+);
+
+void _restoreDialog(BuildContext context, WidgetRef ref) {
+  final ctrl = TextEditingController();
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('بازیابی پشتیبان'),
+      content: SizedBox(
+        width: 320,
+        child: TextField(
+          controller: ctrl,
+          maxLines: 8,
+          decoration: const InputDecoration(
+            hintText: '{"app": "MOLIDO MARKET", ...}',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('انصراف'),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final store = ref.read(localStoreProvider);
+            final backup = BackupService(store);
+            try {
+              final n = await backup.importJson(ctrl.text);
+              // Reload live services so UI reflects restored data.
+              await ref.read(watchlistProvider).load();
+              await ref.read(portfolioProvider).load();
+              await ref.read(alertsProvider).load();
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('بازیابی انجام شد ($n بخش)')),
+                );
+              }
+            } on FormatException {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('متن JSON معتبر نیست')),
+                );
+              }
+            }
+          },
+          child: const Text('بازیابی'),
+        ),
+      ],
+    ),
+  );
 }

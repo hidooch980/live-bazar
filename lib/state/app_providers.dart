@@ -55,6 +55,37 @@ final timeZoneProvider = Provider<TimeZoneService>(
   (ref) => throw UnimplementedError('override in main'),
 );
 
+/// Display prices in Toman (default ON, persisted locally).
+class TomanModeController extends Notifier<bool> {
+  static const _key = 'display_toman';
+
+  @override
+  bool build() {
+    // Load persisted preference once; default true per user expectation.
+    final store = ref.watch(localStoreProvider);
+    store.getString(_key).then((v) {
+      final persisted = v == null ? true : v == '1';
+      if (persisted != state) state = persisted;
+    });
+    return true;
+  }
+
+  Future<void> set(bool value) async {
+    state = value;
+    await ref.read(localStoreProvider).setString(_key, value ? '1' : '0');
+  }
+}
+
+final tomanModeProvider = NotifierProvider<TomanModeController, bool>(
+  TomanModeController.new,
+);
+
+/// Returns the live fx_irr quote (IRR per USD) for Toman conversion.
+PriceQuote? irrQuoteOf(MarketSnapshotLike? snapshot) {
+  final q = snapshot?.quotes['fx_irr'];
+  return q != null && q.status.isDisplayable ? q : null;
+}
+
 final marketSideEffectsProvider = Provider<MarketSideEffects>(
   (ref) => MarketSideEffects(
     history: ref.watch(historyProvider),
