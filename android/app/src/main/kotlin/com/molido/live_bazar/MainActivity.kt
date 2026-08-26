@@ -39,6 +39,21 @@ class MainActivity : FlutterActivity() {
                         openInstallPermissionSettings()
                         result.success(true)
                     }
+                    "share" -> {
+                        val path = call.argument<String>("path")
+                        val mime = call.argument<String>("mime") ?: "*/*"
+                        val subject = call.argument<String>("subject")
+                        if (path == null) {
+                            result.error("invalid_args", "path missing", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            shareFile(path, mime, subject)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("share_failed", e.message, null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -77,5 +92,21 @@ class MainActivity : FlutterActivity() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
+    }
+
+    private fun shareFile(path: String, mime: String, subject: String?) {
+        val file = File(path)
+        val uri: Uri = FileProvider.getUriForFile(
+            this,
+            "$packageName.fileProvider",
+            file,
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = mime
+            putExtra(Intent.EXTRA_STREAM, uri)
+            if (subject != null) putExtra(Intent.EXTRA_SUBJECT, subject)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, subject ?: "share"))
     }
 }

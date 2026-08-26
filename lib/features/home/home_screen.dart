@@ -210,13 +210,13 @@ class _ProviderDiagnostics extends StatelessWidget {
   }
 }
 
-class _ConnectionHeader extends StatelessWidget {
+class _ConnectionHeader extends ConsumerWidget {
   const _ConnectionHeader({required this.busy});
 
   final bool busy;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       padding: const EdgeInsets.all(14),
@@ -237,6 +237,8 @@ class _ConnectionHeader extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const Spacer(),
+          const _TomanToggle(),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
@@ -255,6 +257,31 @@ class _ConnectionHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tap to switch LIVE price display between Toman and USD.
+class _TomanToggle extends ConsumerWidget {
+  const _TomanToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final toman = ref.watch(tomanModeProvider);
+    return GestureDetector(
+      onTap: () => ref.read(tomanModeProvider.notifier).set(!toman),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppTheme.gold.withValues(alpha: 0.5)),
+        ),
+        child: Text(
+          toman ? 'تومان' : 'دلار',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+        ),
       ),
     );
   }

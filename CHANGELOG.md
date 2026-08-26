@@ -4,6 +4,22 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [0.1.3] — 2026-08-25
+
+### Added
+- **Live Toman display:** every price converts in real time via the
+  official published USD/IRR rate (er-api / jsDelivr — real source data,
+  never fabricated). Tap «تومان/دلار» on the Home header to switch;
+  preference persists. USD value shown as secondary text.
+- New `fx_irr` asset (official IRR rate) served by the FX chain.
+- **Asset detail screen (§26):** price header (Toman + USD), change/%,
+  real source timestamp, Market Score card (statistical-only disclaimer),
+  session high/low from accumulated local history, buy/sell and source
+  facts. Opened by tapping any quote.
+- **Local backup/restore (§34):** export watchlist + portfolio + alerts as
+  a JSON file via the Android share sheet; restore by pasting the JSON.
+  Nothing leaves the device unless the user shares it themselves.
+
 ## [0.1.2] — 2026-08-25
 
 ### Added

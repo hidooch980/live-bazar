@@ -29,7 +29,7 @@ class AssetDefinition {
 }
 
 abstract final class AssetCatalog {
-  // ---- GLOBAL CURRENCY (verified: open.er-api.com + frankfurter.dev) ----
+  // ---- GLOBAL CURRENCY (verified: open.er-api.com + jsDelivr + ECB) ----
   static const globalCurrencies = <AssetDefinition>[
     _usd,
     _eur,
@@ -37,6 +37,7 @@ abstract final class AssetCatalog {
     _aed,
     _try_,
     _cny,
+    _irr,
     _cad,
     _aud,
     _chf,
@@ -349,5 +350,16 @@ abstract final class AssetCatalog {
     category: AssetCategory.currency,
     unit: '',
     currency: 'JPY',
+  );
+
+  /// Official published IRR rate (real source data; NOT free-market).
+  static const _irr = AssetDefinition(
+    id: 'fx_irr',
+    symbol: 'USD/IRR',
+    name: 'Iranian Rial (official)',
+    nameFa: 'ریال ایران (رسمی)',
+    category: AssetCategory.currency,
+    unit: 'ریال',
+    currency: 'IRR',
   );
 }

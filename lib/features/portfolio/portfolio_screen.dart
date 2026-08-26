@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/asset_catalog.dart';
 import '../../core/utils/fa_number.dart';
+import '../../core/utils/price_display.dart';
 import '../../state/app_providers.dart';
 
 /// PORTFOLIO (§24): local-only holdings valued against latest VALID quotes.
@@ -16,6 +17,19 @@ class PortfolioScreen extends ConsumerWidget {
     final portfolio = ref.read(portfolioProvider);
 
     final valuation = portfolio.value(market.snapshot?.quotes ?? const {});
+    final useToman = ref.watch(tomanModeProvider);
+    final irr = irrQuoteOf(market.snapshot);
+
+    String totalText;
+    String unitText;
+    if (useToman && irr != null) {
+      final t = valuation.totalValue * irr.price / 10;
+      totalText = PriceDisplay.tomanText(t);
+      unitText = PriceDisplay.tomanUnit;
+    } else {
+      totalText = valuation.totalValue.toStringAsFixed(2).faString;
+      unitText = 'دلار';
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('پورتفولیو من')),
@@ -27,10 +41,10 @@ class PortfolioScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(18),
               child: Column(
                 children: [
-                  const Text('ارزش کل (دلاری)'),
+                  Text('ارزش کل ($unitText)'),
                   const SizedBox(height: 8),
                   Text(
-                    valuation.totalValue.toStringAsFixed(2).faString,
+                    totalText,
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,

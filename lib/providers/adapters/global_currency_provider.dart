@@ -31,6 +31,7 @@ class GlobalCurrencyProvider implements IPriceProvider {
     'fx_aud': 'AUD',
     'fx_chf': 'CHF',
     'fx_jpy': 'JPY',
+    'fx_irr': 'IRR',
   };
 
   @override
@@ -202,7 +203,11 @@ class GlobalCurrencyProvider implements IPriceProvider {
       final code = entry.value;
       double? price;
       if (code == 'USD') {
-        price = 1.0;
+        price = 1.0; // USD in USD terms
+      } else if (code == 'IRR') {
+        // fx_irr is quoted as IRR per 1 USD — invert the USD-per-IRR map.
+        final usdPerIrr = usdPerUnit['IRR'];
+        if (usdPerIrr != null && usdPerIrr > 0) price = 1 / usdPerIrr;
       } else {
         price = usdPerUnit[code];
       }
