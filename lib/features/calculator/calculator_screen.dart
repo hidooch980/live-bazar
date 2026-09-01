@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/asset_catalog.dart';
 import '../../core/utils/fa_number.dart';
+import '../../core/utils/price_display.dart';
 import '../../state/app_providers.dart';
 
 /// CALCULATOR (§25): converts between enabled assets using the latest
@@ -12,6 +13,20 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+/// Enough decimals to stay meaningful across nine orders of magnitude:
+/// one coin is ~1035 dollars, one dollar is ~0.00097 coins.
+String _formatResult(double v) {
+  final abs = v.abs();
+  final fraction = abs >= 1000
+      ? 0
+      : abs >= 1
+      ? 4
+      : abs >= 0.0001
+      ? 8
+      : 10;
+  return v.faPrice(fraction: fraction).faString;
 }
 
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
@@ -34,8 +49,17 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       final t = snap.quotes[_to];
       final amount = double.tryParse(_amountCtrl.text.replaceAll(',', ''));
       if (f != null && t != null && amount != null) {
-        // Both quoted in USD terms -> cross rate.
-        result = amount * (f.price / t.price);
+        // The two sides are NOT in the same unit: fx_* and crypto are
+        // quoted in USD, everything from the Iranian market in Toman.
+        // Dividing the raw prices asked what 1.0 USD is in units of
+        // 214,000 Toman and answered 0.0000. Normalize both to Toman
+        // first — the same real rate the rest of the app displays with.
+        final rate = tomanRateOf(snap);
+        final fromToman = PriceDisplay.toman(f, rate);
+        final toToman = PriceDisplay.toman(t, rate);
+        if (fromToman != null && toToman != null && toToman > 0) {
+          result = amount * (fromToman / toToman);
+        }
       }
     }
 
@@ -52,6 +76,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   label: Text(label, overflow: TextOverflow.ellipsis),
                 ),
             ],
+            showSelectedIcon: false,
             selected: {_from},
             onSelectionChanged: (s) => setState(() => _from = s.first),
           ),
@@ -95,7 +120,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   Text(
                     result == null
                         ? 'داده معتبر موجود نیست'
-                        : result.faPrice(fraction: 4).faString,
+                        : _formatResult(result),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,

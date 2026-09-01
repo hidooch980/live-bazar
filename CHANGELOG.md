@@ -4,6 +4,21 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **ماشین‌حساب برای تبدیل بین تومان و دلار عدد صفر می‌داد.** The converter
+  divided one quote's price by the other's, with a comment claiming both
+  were in USD terms. They are not: `fx_*` and crypto are quoted in USD,
+  everything from the Iranian market in Toman. So «۱ دلار آمریکا» into
+  «دلار آمریکا (بازار آزاد)» — the same dollar — answered **۰.۰۰۰۰**
+  instead of ۱. Both sides are now normalized to Toman with the same real
+  rate the rest of the app displays with.
+- The result was printed with four fixed decimals, which flattened every
+  small ratio to «۰.۰۰۰۰»; ۱ دلار is ۰.۰۰۰۹۶۶ سکه امامی and now says so.
+- The selected segment in the converter's currency row showed a checkmark
+  and no label, so you could not tell what you were converting from.
+
 ## [0.5.1] — 2026-09-02
 
 ### Fixed
