@@ -6,6 +6,7 @@ import '../../core/network/http_config.dart';
 import '../../core/utils/fa_number.dart';
 import '../../services/background_alert_worker.dart';
 import '../../services/backup_service.dart';
+import '../../services/home_widget_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
 import '../home/customize_home_screen.dart';
@@ -91,6 +92,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const _Header('هشدارها'),
           const _BackgroundAlertsTile(),
+          const _Header('ویجت صفحه اصلی'),
+          const _HomeWidgetTile(),
           const _Header('پشتیبان‌گیری (کاملاً محلی)'),
           ListTile(
             leading: const Icon(Icons.ios_share),
@@ -126,6 +129,69 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Opt-in switch for publishing prices to the home screen widget.
+class _HomeWidgetTile extends ConsumerStatefulWidget {
+  const _HomeWidgetTile();
+
+  @override
+  ConsumerState<_HomeWidgetTile> createState() => _HomeWidgetTileState();
+}
+
+class _HomeWidgetTileState extends ConsumerState<_HomeWidgetTile> {
+  bool? _on;
+
+  @override
+  void initState() {
+    super.initState();
+    HomeWidgetService.isEnabled(ref.read(localStoreProvider)).then((v) {
+      if (mounted) setState(() => _on = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.widgets_outlined),
+          title: const Text('نمایش قیمت‌ها در ویجت'),
+          subtitle: const Text(
+            'دلار، طلای ۱۸ و سکه امامی روی صفحه اصلی گوشی. ویجت را از فشار طولانی روی صفحه اصلی اضافه کن.',
+          ),
+          value: _on ?? false,
+          onChanged: _on == null
+              ? null
+              : (v) async {
+                  setState(() => _on = v);
+                  await HomeWidgetService.setEnabled(
+                    ref.read(localStoreProvider),
+                    v,
+                  );
+                  if (v) {
+                    final snap = ref.read(marketControllerProvider).snapshot;
+                    if (snap != null) {
+                      await HomeWidgetService.publish(
+                        ref.read(localStoreProvider),
+                        snap.quotes,
+                      );
+                    }
+                  }
+                },
+        ),
+        if (_on == true)
+          const ListTile(
+            dense: true,
+            leading: Icon(Icons.info_outline, size: 18),
+            title: Text(
+              'برای به‌روز ماندن ویجت با بسته بودن اپ، «بررسی هشدارها در پس‌زمینه» را هم روشن کن.',
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
+      ],
     );
   }
 }

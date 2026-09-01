@@ -59,8 +59,9 @@ flutter build apk --release     # CI builds releases on tags (v*)
 - [x] Persian RTL dashboard, market tabs, calculator
 - [x] داشبورد بازارمحور + شخصی‌سازی خانه (نمایش و ترتیب بخش‌ها)
 - [x] بازار ایران زنده: دلار/ارز آزاد، طلا، مثقال، انس، سکه
-- [ ] Watchlist, price alerts (local notifications), portfolio (§22–24)
-- [ ] Charts from accumulated local history (§19, §27)
+- [x] Watchlist, price alerts (local + background notifications), portfolio (§22–24)
+- [x] Charts: published daily history + local intraday (§19, §27)
+- [x] ویجت صفحه اصلی اندروید
 - [ ] MOLIDO MARKET AI modules (V2, never faked in V1) (§32)
 
 ## Disclaimer

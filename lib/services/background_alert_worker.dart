@@ -5,11 +5,13 @@ import '../config/asset_catalog.dart';
 import '../core/network/http_config.dart';
 import '../data/cache/local_state_store.dart';
 import '../domain/entities/alert_rule.dart';
+import '../domain/entities/price_quote.dart';
 import '../providers/adapters/crypto_provider.dart';
 import '../providers/adapters/global_currency_provider.dart';
 import '../providers/adapters/iranian_market_provider.dart';
 import '../providers/iprice_provider.dart';
 import 'alert_service.dart';
+import 'home_widget_service.dart';
 import 'notification_service.dart';
 import 'timezone_service.dart';
 
@@ -108,10 +110,16 @@ Future<int> runBackgroundAlertCheck({
   final alerts = AlertService(localStore);
   await alerts.load();
   final active = alerts.rules.where((r) => r.isActive).toList();
-  if (active.isEmpty) return 0;
 
-  // Only fetch what an active rule actually needs.
-  final wanted = active.map((r) => r.assetId).toSet();
+  // The widget needs refreshing even with no alert rules — that is the
+  // whole point of a widget.
+  final widgetOn = await HomeWidgetService.isEnabled(localStore);
+  if (active.isEmpty && !widgetOn) return 0;
+
+  final wanted = {
+    ...active.map((r) => r.assetId),
+    if (widgetOn) ...HomeWidgetService.assets.keys,
+  };
 
   await MarketHttp.instance.load(localStore);
   final chain =
@@ -119,6 +127,7 @@ Future<int> runBackgroundAlertCheck({
       [IranianMarketProvider(), CryptoProvider(), GlobalCurrencyProvider()];
 
   final quotes = <String, ({double price, double changePercent})>{};
+  final fullQuotes = <String, PriceQuote>{};
   for (final provider in chain) {
     final needed = provider.supportedAssets.intersection(wanted);
     if (needed.isEmpty) continue;
@@ -128,9 +137,13 @@ Future<int> runBackgroundAlertCheck({
       if (q.price <= 0) continue;
       if (AssetCatalog.byId(q.id) == null) continue;
       quotes[q.id] = (price: q.price, changePercent: q.changePercent);
+      fullQuotes[q.id] = q;
     }
   }
   if (quotes.isEmpty) return 0;
+
+  if (widgetOn) await HomeWidgetService.publish(localStore, fullQuotes);
+  if (active.isEmpty) return 0;
 
   final fired = await alerts.evaluate(quotes: quotes);
   if (fired.isEmpty) return 0;

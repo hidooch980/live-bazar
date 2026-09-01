@@ -33,6 +33,13 @@ versioning follows [SemVer](https://semver.org/).
   periodic work. Off by default, it only fetches the assets an active rule
   actually names, and does no network work at all when there are no rules.
 
+- **ویجت صفحه اصلی اندروید.** دلار، طلای ۱۸ و سکه امامی روی صفحه گوشی,
+  without opening the app. Opt-in (Settings › ویجت صفحه اصلی), refreshed
+  from the foreground engine while the app is open and by the background
+  worker while it is closed. The widget always carries its own
+  «به‌روزرسانی HH:MM» line and omits any asset whose quote is unusable,
+  so it can never pass a stale number off as current.
+
 
 ### Notes on units — each verified against the live feed
 - The yen is published **per 100 units**; its name says so, otherwise the

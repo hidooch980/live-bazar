@@ -1,8 +1,10 @@
 import '../domain/entities/alert_rule.dart';
 import '../domain/entities/market_snapshot.dart';
 import '../domain/entities/price_quote.dart';
+import '../data/cache/local_state_store.dart';
 import 'alert_service.dart';
 import 'historical_snapshot_service.dart';
+import 'home_widget_service.dart';
 import 'notification_service.dart';
 
 /// Bridges engine snapshots into local side effects:
@@ -12,11 +14,13 @@ class MarketSideEffects {
     required this.history,
     required this.alerts,
     required this.notifications,
+    required this.store,
   });
 
   final HistoricalSnapshotService history;
   final AlertService alerts;
   final NotificationService notifications;
+  final KeyValueStore store;
 
   Future<void> onSnapshot(MarketSnapshot snapshot) async {
     // 1) Record real observations for future charts.
@@ -26,7 +30,10 @@ class MarketSideEffects {
           e.key: PricePoint(e.value.timestamp, e.value.price),
     });
 
-    // 2) Evaluate local alert rules; fire notifications for hits.
+    // 2) Keep the home screen widget in step with the foreground app.
+    await HomeWidgetService.publish(store, snapshot.quotes);
+
+    // 3) Evaluate local alert rules; fire notifications for hits.
     final fired = await alerts.evaluate(
       quotes: {
         for (final e in snapshot.quotes.entries)

@@ -36,6 +36,20 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Home screen widget. Values are written by the Dart side and
+             refreshed by the same background worker as price alerts;
+             updatePeriodMillis is Android's own fallback refresh. -->
+        <receiver
+            android:name=".MolidoWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/molido_widget_info"/>
+        </receiver>
+
         <!-- FileProvider: shares the downloaded update APK with the installer. -->
         <provider
             android:name="androidx.core.content.FileProvider"

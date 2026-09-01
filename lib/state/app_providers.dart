@@ -104,6 +104,7 @@ final marketSideEffectsProvider = Provider<MarketSideEffects>(
     history: ref.watch(historyProvider),
     alerts: ref.watch(alertsProvider),
     notifications: ref.watch(notificationsProvider),
+    store: ref.watch(localStoreProvider),
   ),
 );
 
