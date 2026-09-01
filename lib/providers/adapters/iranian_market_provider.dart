@@ -6,6 +6,7 @@ import '../../config/asset_catalog.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/network/http_config.dart';
+import '../../core/utils/fa_number.dart';
 import '../../core/utils/price_display.dart';
 import '../../domain/entities/price_quote.dart';
 import '../iprice_provider.dart';
@@ -175,7 +176,7 @@ class IranianMarketProvider implements IPriceProvider {
       if (row is! Map) continue;
       final def = AssetCatalog.byId(entry.value);
       if (def == null) continue;
-      final published = parseNumber(row['p']);
+      final published = parseMarketNumber(row['p']);
       if (published == null) continue;
 
       // TGJU publishes Iranian indicators in Rial; the catalog and the whole
@@ -192,7 +193,7 @@ class IranianMarketProvider implements IPriceProvider {
           nameFa: def.nameFa,
           category: def.category,
           price: published / divisor,
-          change: (parseNumber(row['d']) ?? 0) / divisor * sign,
+          change: (parseMarketNumber(row['d']) ?? 0) / divisor * sign,
           changePercent: ((row['dp'] as num?)?.toDouble() ?? 0) * sign,
           unit: def.unit,
           currency: def.currency,
@@ -205,25 +206,12 @@ class IranianMarketProvider implements IPriceProvider {
     return quotes;
   }
 
-  /// '2,130,050' / '4,368.85' / Persian digits -> double; null when unusable.
-  @visibleForTesting
-  static double? parseNumber(Object? raw) {
-    if (raw == null) return null;
-    final s = _asciiDigits(raw.toString()).replaceAll(_separators, '');
-    if (s.isEmpty) return null;
-    final v = double.tryParse(s);
-    if (v == null || !v.isFinite || v <= 0) return null;
-    return v;
-  }
-
-  static final _separators = RegExp('[,٬\\s]');
-
   /// Feed timestamp ('2026-09-01 13:56:26', Tehran wall-clock) -> UTC.
   @visibleForTesting
   static DateTime? tehranToUtc(Object? raw) {
     if (raw is! String || raw.trim().isEmpty) return null;
     final naive = DateTime.tryParse(
-      _asciiDigits(raw.trim()).replaceFirst(' ', 'T'),
+      toAsciiDigits(raw.trim()).replaceFirst(' ', 'T'),
     );
     if (naive == null) return null;
     try {
@@ -247,20 +235,6 @@ class IranianMarketProvider implements IPriceProvider {
         naive.second,
       ).subtract(_tehranOffset);
     }
-  }
-
-  static String _asciiDigits(String s) {
-    final buf = StringBuffer();
-    for (final code in s.runes) {
-      if (code >= 0x06F0 && code <= 0x06F9) {
-        buf.writeCharCode(code - 0x06F0 + 0x30); // Persian digits
-      } else if (code >= 0x0660 && code <= 0x0669) {
-        buf.writeCharCode(code - 0x0660 + 0x30); // Arabic-Indic digits
-      } else {
-        buf.writeCharCode(code);
-      }
-    }
-    return buf.toString();
   }
 
   ProviderResult _bad(String msg) => ProviderResult(

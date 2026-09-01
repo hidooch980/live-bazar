@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:live_bazar/config/asset_catalog.dart';
+import 'package:live_bazar/core/utils/fa_number.dart';
 import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/providers/adapters/iranian_market_provider.dart';
 
@@ -180,10 +181,10 @@ void main() {
   });
 
   test('number parsing rejects junk', () {
-    expect(IranianMarketProvider.parseNumber('1,234.5'), 1234.5);
-    expect(IranianMarketProvider.parseNumber('۰'), isNull);
-    expect(IranianMarketProvider.parseNumber('-'), isNull);
-    expect(IranianMarketProvider.parseNumber(''), isNull);
-    expect(IranianMarketProvider.parseNumber(null), isNull);
+    expect(parseMarketNumber('1,234.5'), 1234.5);
+    expect(parseMarketNumber('۰'), isNull);
+    expect(parseMarketNumber('-'), isNull);
+    expect(parseMarketNumber(''), isNull);
+    expect(parseMarketNumber(null), isNull);
   });
 }

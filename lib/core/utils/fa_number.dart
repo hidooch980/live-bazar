@@ -65,3 +65,32 @@ String _group(String digits) {
   }
   return buf.toString();
 }
+
+/// Persian (۰-۹) and Arabic-Indic (٠-٩) digits -> ASCII.
+String toAsciiDigits(String s) {
+  final buf = StringBuffer();
+  for (final code in s.runes) {
+    if (code >= 0x06F0 && code <= 0x06F9) {
+      buf.writeCharCode(code - 0x06F0 + 0x30);
+    } else if (code >= 0x0660 && code <= 0x0669) {
+      buf.writeCharCode(code - 0x0660 + 0x30);
+    } else {
+      buf.writeCharCode(code);
+    }
+  }
+  return buf.toString();
+}
+
+final _numberSeparators = RegExp(r'[,٬\s]');
+
+/// Market numbers as sources publish them: '2,130,050', '4,368.85', or
+/// Persian digits. Returns null for anything unusable ('-', '', 0, junk)
+/// so a caller can skip the row instead of inventing a value.
+double? parseMarketNumber(Object? raw) {
+  if (raw == null) return null;
+  final s = toAsciiDigits(raw.toString()).replaceAll(_numberSeparators, '');
+  if (s.isEmpty) return null;
+  final v = double.tryParse(s);
+  if (v == null || !v.isFinite || v <= 0) return null;
+  return v;
+}

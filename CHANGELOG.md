@@ -17,6 +17,14 @@ versioning follows [SemVer](https://semver.org/).
 - `AssetDefinition.tradable`: a market index or a coin bubble is a real
   published number but not a position, so the portfolio and the converter
   leave those out while alerts and charts still cover them.
+- **نمودار با تاریخچه‌ی واقعی.** Charts used to draw only what accumulated
+  while the app happened to be open, so a fresh install showed an empty
+  frame. Long ranges (۱ ماه / ۳ ماه / ۱ سال / همه) now come from the
+  source's published daily OHLC table — about 7 years per asset after the
+  2000-candle cap — while ۱ ساعت / ۶ ساعت / ۱ روز still use the local
+  observations. The footer always says which of the two is on screen and
+  how many real records it holds; crypto and global FX have no published
+  table and keep the local-only path.
 
 ### Notes on units — each verified against the live feed
 - The yen is published **per 100 units**; its name says so, otherwise the
