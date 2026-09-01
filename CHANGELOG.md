@@ -4,6 +4,21 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Every Toman price repeated itself under an «IRR» label.** A row read
+  «۲۱۴,۰۰۰ تومان» with «IRR ۲۱۴,۰۰۰» beneath it — the same number, labelled
+  as Rial, which is a tenth of a Toman. Worst on دینار عراق, where rounding
+  made the two lines differ («۱۵۳.۱ تومان» / «IRR ۱۵۳») and look like two
+  prices. An IRR-denominated quote already IS the Toman figure, so it no
+  longer gets a second line.
+- **The chart opened on an empty frame.** It defaulted to the first catalog
+  asset (`fx_usd` — no published table) and to the ۱ ساعت range (no local
+  points yet on a fresh install), so the first thing anyone saw was «داده
+  کافی نیست» even though years of real history were one tap away. It now
+  opens on an asset that has published history, at a daily range.
+
 ## [0.5.0] — 2026-09-01
 
 ### Added
