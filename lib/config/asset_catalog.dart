@@ -3,9 +3,9 @@ import '../domain/entities/price_quote.dart';
 /// Static catalog of supported assets.
 ///
 /// Only assets with a VERIFIED data source may be [enabled].
-/// Iranian free-market and gold/coin quotes require providers that either
-/// need server-side credentials or have no official public API in V1, so
-/// they ship disabled (DATA UNAVAILABLE / SERVER_REQUIRED).
+/// Iranian free-market, gold and coin quotes come from the public keyless
+/// TGJU feed (see IranianMarketProvider) with the feed's own timestamps.
+/// Anything without such a source stays disabled (DATA UNAVAILABLE).
 class AssetDefinition {
   const AssetDefinition({
     required this.id,
@@ -44,7 +44,7 @@ abstract final class AssetCatalog {
     _jpy,
   ];
 
-  // ---- IRANIAN FREE MARKET (no verified keyless API -> disabled) ----
+  // ---- IRANIAN FREE MARKET (verified keyless: TGJU live feed) ----
   static const iranianMarket = <AssetDefinition>[
     AssetDefinition(
       id: 'ir_usd',
@@ -54,7 +54,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'ir_eur',
@@ -64,7 +63,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'ir_aed',
@@ -74,7 +72,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'ir_gbp',
@@ -84,7 +81,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'ir_try',
@@ -94,7 +90,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'ir_cny',
@@ -104,11 +99,10 @@ abstract final class AssetCatalog {
       category: AssetCategory.iranianCurrency,
       unit: 'تومان',
       currency: 'IRR',
-      enabled: false,
     ),
   ];
 
-  // ---- GOLD & COINS (no verified keyless API -> disabled) ----
+  // ---- GOLD & COINS (verified keyless: TGJU live feed) ----
   static const goldAndCoins = <AssetDefinition>[
     AssetDefinition(
       id: 'gold_18k',
@@ -118,7 +112,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.gold,
       unit: 'گرم',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'gold_24k',
@@ -128,7 +121,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.gold,
       unit: 'گرم',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'mesghal',
@@ -138,7 +130,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.gold,
       unit: 'مثقال',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'xau_usd',
@@ -148,7 +139,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.gold,
       unit: 'اونس',
       currency: 'USD',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'silver',
@@ -158,7 +148,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.gold,
       unit: 'اونس',
       currency: 'USD',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'coin_emami',
@@ -168,7 +157,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.coin,
       unit: 'عدد',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'coin_bahar',
@@ -178,7 +166,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.coin,
       unit: 'عدد',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'coin_half',
@@ -188,7 +175,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.coin,
       unit: 'عدد',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'coin_quarter',
@@ -198,7 +184,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.coin,
       unit: 'عدد',
       currency: 'IRR',
-      enabled: false,
     ),
     AssetDefinition(
       id: 'coin_gram',
@@ -208,7 +193,6 @@ abstract final class AssetCatalog {
       category: AssetCategory.coin,
       unit: 'عدد',
       currency: 'IRR',
-      enabled: false,
     ),
   ];
 

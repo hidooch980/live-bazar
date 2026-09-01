@@ -75,7 +75,8 @@ class CryptoProvider implements IPriceProvider {
       'usdt_usd': 'tether',
     };
     try {
-      final res = await _dio.get<List<dynamic>>(
+      // /simple/price answers with a JSON OBJECT keyed by coin id.
+      final res = await _dio.get<Map<dynamic, dynamic>>(
         'https://api.coingecko.com/api/v3/simple/price',
         queryParameters: {
           'ids': map.values.join(','),
@@ -85,7 +86,7 @@ class CryptoProvider implements IPriceProvider {
       );
       final data = res.data;
       if (data == null || data.isEmpty) return _bad('CoinGecko empty');
-      final body = Map<String, dynamic>.from(data.first as Map);
+      final body = Map<String, dynamic>.from(data);
       final ts = _serverTime(res) ?? DateTime.now().toUtc();
       final quotes = <PriceQuote>[];
       for (final e in map.entries) {

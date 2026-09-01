@@ -4,6 +4,34 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **بازار ایران، لحظه‌ای (live Iranian market).** New `IranianMarketProvider`
+  serves the free-market dollar/euro/dirham/pound/lira/yuan, gold 18K & 24K,
+  mesghal, the global gold & silver ounces and all five coins from the public
+  keyless TGJU feed (`call{1,2,3}.tgju.org/ajax.json`, three mirrors with
+  failover). Polled every 15s with the feed's own second-level timestamps —
+  still zero backend.
+- Iranian, gold and coin assets are `enabled` in the catalog; they no longer
+  render as DATA UNAVAILABLE.
+- Live freshness smoke test for the feed (`live_network_smoke_test.dart`).
+- Two traps the feed sets, handled in the adapter: it sits behind a 5-minute
+  CDN cache (a plain GET can hand back ~50-minute-old prices, so requests
+  carry a 10s-bucketed cache-buster), and its timestamps are Tehran
+  wall-clock (converted to UTC before the validation/staleness gates).
+
+### Fixed
+- **CoinGecko never worked:** `/simple/price` returns a JSON object but the
+  adapter asked Dio for a `List`, so the primary crypto source threw on every
+  call and silently fell through to CoinPaprika.
+- **Change % was overwritten every poll.** The engine replaced the provider's
+  real daily move with the delta between two polls seconds apart, so the UI
+  showed ~0% for everything after the first refresh. It is now derived only
+  when the provider publishes no change metric.
+- A real but hours-old price (quarter coin, gram coin) is labeled STALE
+  instead of LIVE.
+
 ## [0.1.3] — 2026-08-25
 
 ### Added

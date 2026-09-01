@@ -6,7 +6,7 @@ import '../domain/entities/alert_rule.dart';
 import '../domain/entities/price_quote.dart';
 import '../providers/adapters/crypto_provider.dart';
 import '../providers/adapters/global_currency_provider.dart';
-import '../providers/adapters/server_required_provider.dart';
+import '../providers/adapters/iranian_market_provider.dart';
 import '../providers/provider_registry.dart';
 import '../services/alert_service.dart';
 import '../services/historical_snapshot_service.dart';
@@ -104,46 +104,9 @@ ProviderRegistry buildRegistry() {
     ProviderEntry(provider: GlobalCurrencyProvider(), priority: 1),
   );
   registry.register(ProviderEntry(provider: CryptoProvider(), priority: 1));
-  // Disabled in V1 (SERVER_REQUIRED).
+  // Priority 2: Iranian free market, gold & coins — live keyless TGJU feed.
   registry.register(
-    ProviderEntry(
-      provider: const ServerRequiredProvider(
-        id: 'iranian-market',
-        displayName: 'Iranian Free Market',
-        supportedAssets: {
-          'ir_usd',
-          'ir_eur',
-          'ir_aed',
-          'ir_gbp',
-          'ir_try',
-          'ir_cny',
-        },
-      ),
-      priority: 9,
-      enabledOverride: false,
-    ),
-  );
-  registry.register(
-    ProviderEntry(
-      provider: const ServerRequiredProvider(
-        id: 'iranian-gold',
-        displayName: 'Iranian Gold & Coins',
-        supportedAssets: {
-          'gold_18k',
-          'gold_24k',
-          'mesghal',
-          'xau_usd',
-          'silver',
-          'coin_emami',
-          'coin_bahar',
-          'coin_half',
-          'coin_quarter',
-          'coin_gram',
-        },
-      ),
-      priority: 9,
-      enabledOverride: false,
-    ),
+    ProviderEntry(provider: IranianMarketProvider(), priority: 2),
   );
   return registry;
 }
