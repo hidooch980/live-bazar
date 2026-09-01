@@ -94,3 +94,12 @@ double? parseMarketNumber(Object? raw) {
   if (v == null || !v.isFinite || v <= 0) return null;
   return v;
 }
+
+/// Persian "N ago" for a quote's real age. Says what the user needs to
+/// know — how old the number is — instead of a bare "stale" verdict.
+String faAgeLabel(Duration age) {
+  if (age.isNegative || age.inSeconds < 60) return 'همین الان';
+  if (age.inMinutes < 60) return '${age.inMinutes.faDigits} دقیقه پیش';
+  if (age.inHours < 24) return '${age.inHours.faDigits} ساعت پیش';
+  return '${age.inDays.faDigits} روز پیش';
+}

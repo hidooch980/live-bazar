@@ -179,8 +179,11 @@ void main() {
   );
 
   test(
-    'a real but old provider timestamp is labeled STALE, not LIVE',
+    'a fetch that succeeded against a quiet source is DELAYED, not STALE',
     () async {
+      // The Iranian market closes at 20:00; at 22:00 the feed still answers,
+      // it just answers with the 19:59 print. That is not a failure on our
+      // side, and calling it STALE reads as one.
       final old = DateTime.now().toUtc().subtract(const Duration(hours: 3));
       final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
         ..behavior = (_) async =>
@@ -188,7 +191,8 @@ void main() {
       final engine = _engine([fx]);
 
       final snap = await engine.refresh(force: true);
-      expect(snap!.quotes['fx_eur']!.status, QuoteStatus.stale);
+      expect(snap!.quotes['fx_eur']!.status, QuoteStatus.delayed);
+      expect(snap.quotes['fx_eur']!.status.isDisplayable, isTrue);
       expect(
         snap.quotes['fx_eur']!.price,
         1.1,
@@ -196,6 +200,29 @@ void main() {
       await engine.dispose();
     },
   );
+
+  test('a quote we could NOT refresh becomes STALE', () async {
+    final t = DateTime.now().toUtc();
+    var down = false;
+    final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
+      ..behavior = (_) async => down
+          ? const ProviderResult(
+              quotes: [],
+              error: AppException(AppErrorCode.network, 'down'),
+            )
+          : ProviderResult(quotes: [quoteFor('fx_eur', price: 1.1, ts: t)]);
+    final engine = _engine([fx]);
+
+    final first = await engine.refresh(force: true);
+    expect(first!.quotes['fx_eur']!.status, QuoteStatus.live);
+
+    down = true;
+    final second = await engine.refresh(force: true);
+    // The value is carried over — but it must stop claiming to be live.
+    expect(second!.quotes['fx_eur']!.price, 1.1);
+    expect(second.quotes['fx_eur']!.status, QuoteStatus.stale);
+    await engine.dispose();
+  });
 
   test('enabled assets and registered live sources match exactly (§7/§10)', () {
     final served = <String>{

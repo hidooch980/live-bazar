@@ -84,7 +84,7 @@ class QuoteTile extends ConsumerWidget {
         ),
         subtitle: Row(
           children: [
-            StatusBadge(status: quote.status),
+            StatusBadge(status: quote.status, timestamp: quote.timestamp),
             const SizedBox(width: 6),
             Text(
               quote.source,
@@ -123,16 +123,28 @@ class QuoteTile extends ConsumerWidget {
 
 /// Visual representation of [QuoteStatus] — never shows cached data as LIVE.
 class StatusBadge extends StatelessWidget {
-  const StatusBadge({super.key, required this.status});
+  const StatusBadge({super.key, required this.status, this.timestamp});
 
   final QuoteStatus status;
 
+  /// The source's publish time, so a delayed quote can say HOW old it is
+  /// rather than just that it is old.
+  final DateTime? timestamp;
+
   @override
   Widget build(BuildContext context) {
+    final age = timestamp == null
+        ? null
+        : DateTime.now().toUtc().difference(timestamp!.toUtc());
     final (label, color) = switch (status) {
       QuoteStatus.live => ('زنده', AppTheme.green),
       QuoteStatus.unchanged => ('بدون تغییر', Colors.grey),
-      QuoteStatus.stale => ('قدیمی', Colors.orange),
+      // Not a failure: the market is simply not trading right now.
+      QuoteStatus.delayed => (
+        age == null ? 'خارج از ساعت بازار' : faAgeLabel(age),
+        AppTheme.gold,
+      ),
+      QuoteStatus.stale => ('به‌روزرسانی نشد', Colors.orange),
       QuoteStatus.cached => ('کش‌شده', Colors.blueGrey),
       QuoteStatus.fallback => ('پشتیبان', Colors.indigo),
       QuoteStatus.dataConflict => ('تعارض داده', AppTheme.red),
