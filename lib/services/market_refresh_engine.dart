@@ -6,6 +6,7 @@ import '../core/constants/app_constants.dart';
 import '../data/cache/market_cache.dart';
 import '../domain/entities/market_snapshot.dart';
 import '../domain/entities/price_quote.dart';
+import '../providers/iprice_provider.dart';
 import '../providers/provider_registry.dart';
 import 'request_lock.dart';
 import 'validation/anomaly_detection_service.dart';
@@ -101,8 +102,11 @@ class MarketRefreshEngine {
       final t0 = DateTime.now();
       final merged = Map<String, PriceQuote>.from(_latest?.quotes ?? {});
       final sourceStatus = <String, String>{};
-      var anySuccess = false;
-      var anyFailure = false;
+      // Assets a provider actually refreshed this cycle; anything a FAILED
+      // provider covers but did not refresh is carried over from the last
+      // snapshot and must stop claiming to be live.
+      final refreshed = <String>{};
+      final failedProviders = <IPriceProvider>[];
 
       final futures = <Future<bool?>>[];
       for (final entry in _providers.entries.where((e) => e.isActive)) {
@@ -122,7 +126,6 @@ class MarketRefreshEngine {
               provider.supportedAssets,
             );
             if (result.isSuccess && result.quotes.isNotEmpty) {
-              anySuccess = true;
               sourceStatus[provider.id] = 'ok';
               providerStatus[provider.id] = 'ok';
               for (final q in result.quotes) {
@@ -132,9 +135,10 @@ class MarketRefreshEngine {
                   continue;
                 }
                 merged[q.id] = _annotate(q, merged[q.id]);
+                refreshed.add(q.id);
               }
             } else if (!result.isSuccess) {
-              anyFailure = true;
+              failedProviders.add(provider);
               sourceStatus[provider.id] = 'failed';
               providerStatus[provider.id] = 'failed: ${result.error!.message}';
               debugPrint(
@@ -154,6 +158,18 @@ class MarketRefreshEngine {
       await Future.wait(futures);
       lastCycleAt = _now();
 
+      // A quote we could not refresh is STALE — distinct from DELAYED,
+      // which means we DID refresh and the source itself is quiet.
+      for (final provider in failedProviders) {
+        for (final assetId in provider.supportedAssets) {
+          if (refreshed.contains(assetId)) continue;
+          final carried = merged[assetId];
+          if (carried == null) continue;
+          if (carried.status == QuoteStatus.stale) continue;
+          merged[assetId] = carried.copyWith(status: QuoteStatus.stale);
+        }
+      }
+
       final latency = DateTime.now().difference(t0).inMilliseconds;
       final snapshot = MarketSnapshot(
         snapshotId: 'snap-${t0.millisecondsSinceEpoch}',
@@ -163,9 +179,12 @@ class MarketRefreshEngine {
         latencyMs: latency,
       );
 
-      if (anySuccess || !anyFailure || _latest == null) {
-        _latest = snapshot;
-      }
+      // `merged` starts from the previous snapshot and only ever adds to or
+      // re-labels it, so it is never worse than what it replaces. Adopting
+      // it unconditionally is what lets a failed refresh downgrade a
+      // carried-over quote from LIVE to STALE instead of leaving it
+      // claiming to be current.
+      _latest = snapshot;
       await _store.saveSnapshot(_latest!);
 
       // Broadcast unconditionally: with no listeners the event is simply
@@ -201,10 +220,14 @@ class MarketRefreshEngine {
     final state = anomalySvc.assess(candidate: q, previousValid: previous);
     switch (state) {
       case AnomalyState.valid:
-        // A thinly traded asset can publish a real but hours-old price —
-        // label it STALE instead of passing it off as LIVE (§13).
+        // This quote WAS just fetched successfully, so it is the newest the
+        // source offers. If the source's own publish time is old, the market
+        // is closed or the asset is thinly traded — that is DELAYED, not
+        // STALE. STALE is reserved for data we failed to refresh (§13).
         return q.copyWith(
-          status: _validation.isStale(q) ? QuoteStatus.stale : QuoteStatus.live,
+          status: _validation.isStale(q)
+              ? QuoteStatus.delayed
+              : QuoteStatus.live,
         );
       case AnomalyState.suspicious:
         // Keep last valid value; flag conflict rather than trusting it.

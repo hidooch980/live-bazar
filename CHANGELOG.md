@@ -4,6 +4,25 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **همه‌ی قیمت‌ها شب‌ها «قدیمی» می‌شدند.** After the Iranian market closes at
+  20:00 the feed keeps answering, it just answers with the 19:59 print — so
+  every row turned orange «قدیمی» all night and read as a broken app. That
+  was two separate mistakes:
+  - A quote we DID just fetch is not stale. `QuoteStatus.delayed` now covers
+    "the source itself is quiet" (closed market, thinly traded asset) and the
+    badge shows the real age — «۲ ساعت پیش» — instead of a verdict. `stale`
+    is reserved for what it should always have meant: we could not refresh
+    it. That case previously kept claiming «زنده» forever; a carried-over
+    quote whose provider failed is now downgraded.
+  - The header reported `max(source timestamps)` as «آخرین به‌روزرسانی واقعی
+    منبع», so one 24/7 asset (the global ounce) held it at the current minute
+    while every Iranian row underneath was hours old — the screen
+    contradicted itself. It now reports when the APP last checked, and says
+    each price carries its own time.
+
 ## [0.4.0] — 2026-09-01
 
 ### Added

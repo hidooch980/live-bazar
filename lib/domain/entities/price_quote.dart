@@ -3,6 +3,12 @@ import 'package:flutter/foundation.dart';
 enum QuoteStatus {
   live,
   unchanged,
+
+  /// We hold the newest value the source publishes, but the source has not
+  /// published in a while — an Iranian market that closed at 20:00, or a
+  /// thinly traded coin. Nothing is wrong with the app or the fetch, so
+  /// this must not be dressed up as a failure.
+  delayed,
   stale,
   cached,
   fallback,

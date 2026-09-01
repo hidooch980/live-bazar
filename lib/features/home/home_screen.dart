@@ -80,7 +80,7 @@ class HomeScreen extends ConsumerWidget {
             _ConnectionHeader(busy: state.refreshing),
             if (snap != null) ...[
               _LastUpdate(
-                timestamp: _latestTimestamp(quotes),
+                checkedAt: ref.watch(refreshEngineProvider).lastCycleAt,
                 latencyMs: snap.latencyMs,
               ),
               for (final section in layout.visible)
@@ -168,14 +168,6 @@ class HomeScreen extends ConsumerWidget {
         onToggleFavorite: () =>
             ref.read(watchlistControllerProvider.notifier).toggle(quote.id),
       );
-
-  DateTime? _latestTimestamp(List<PriceQuote> quotes) {
-    DateTime? t;
-    for (final q in quotes) {
-      if (t == null || q.timestamp.isAfter(t)) t = q.timestamp;
-    }
-    return t;
-  }
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -332,22 +324,31 @@ class _TomanToggle extends ConsumerWidget {
   }
 }
 
+/// When the APP last completed a check — not the newest source timestamp.
+///
+/// Reporting max(source timestamps) here was actively misleading: one
+/// 24/7 asset (the global ounce) kept it at the current minute all night
+/// while every Iranian row underneath was hours old, so the screen
+/// contradicted itself. Each row now carries its own source age; this line
+/// only answers "is the app still checking?".
 class _LastUpdate extends StatelessWidget {
-  const _LastUpdate({required this.timestamp, required this.latencyMs});
+  const _LastUpdate({required this.checkedAt, required this.latencyMs});
 
-  final DateTime? timestamp;
+  final DateTime? checkedAt;
   final int latencyMs;
 
   @override
   Widget build(BuildContext context) {
-    if (timestamp == null) return const SizedBox.shrink();
-    final local = timestamp!.toLocal();
+    if (checkedAt == null) return const SizedBox.shrink();
+    final local = checkedAt!.toLocal();
     final hh = local.hour.toString().padLeft(2, '0').faString;
     final mm = local.minute.toString().padLeft(2, '0').faString;
+    final ss = local.second.toString().padLeft(2, '0').faString;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Text(
-        'آخرین به‌روزرسانی واقعی منبع: $hh:$mm — تأخیر ${latencyMs.faDigits} میلی‌ثانیه',
+        'آخرین بررسی اپ: $hh:$mm:$ss — تأخیر ${latencyMs.faDigits} میلی‌ثانیه'
+        '  ·  زمان هر قیمت روی خودش نوشته شده',
         style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
       ),
     );
