@@ -44,7 +44,12 @@ class QuoteTile extends ConsumerWidget {
       final t = PriceDisplay.toman(quote, rate);
       if (t != null) {
         primary = '${PriceDisplay.tomanText(t)} ${PriceDisplay.tomanUnit}';
-        secondary = '${quote.price.faPrice()} ${quote.currency}';
+        // Only a converted quote has a second value worth showing. An
+        // IRR-denominated one IS the Toman figure, so repeating it under
+        // an "IRR" label restated the same number as a tenth of itself.
+        if (quote.currency != 'IRR') {
+          secondary = '${quote.price.faPrice()} ${quote.currency}';
+        }
       } else {
         primary =
             '${quote.price.faPrice()} ${quote.unit.isNotEmpty ? quote.unit : quote.currency}';

@@ -39,7 +39,7 @@ class ChartsScreen extends ConsumerStatefulWidget {
 
 class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   String? _assetId;
-  _Range _range = _daily.first;
+  _Range? _range;
 
   static const _intraday = <_Range>[
     _Range('۱ ساعت', 0, intraday: Duration(hours: 1)),
@@ -63,13 +63,23 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
       for (final d in AssetCatalog.all.where((d) => d.enabled))
         if (quotes.containsKey(d.id)) (d.id, d.nameFa),
     ];
-    _assetId ??= options.isNotEmpty ? options.first.$1 : null;
+    // Open on something that actually has history to draw. Defaulting to
+    // the first catalog entry meant landing on fx_usd — no published table
+    // and no local points yet on a fresh install — so the feature's first
+    // impression was an empty frame.
+    _assetId ??= options
+        .map((o) => o.$1)
+        .where(MarketHistoryService.hasHistory)
+        .followedBy(options.map((o) => o.$1))
+        .firstOrNull;
     final assetId = _assetId;
     final hasDaily =
         assetId != null && MarketHistoryService.hasHistory(assetId);
 
-    // An asset with no published table can only offer intraday ranges.
-    if (!hasDaily && _range.isDaily) _range = _intraday.first;
+    // Same reason for the range: intraday is empty until the app has been
+    // open a while, so start on a daily range whenever one is available.
+    _range ??= hasDaily ? _daily.first : _intraday.first;
+    if (!hasDaily && _range!.isDaily) _range = _intraday.first;
 
     return Scaffold(
       appBar: AppBar(title: const Text('چارت')),
@@ -101,7 +111,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
                     padding: const EdgeInsets.only(left: 8),
                     child: ChoiceChip(
                       label: Text(r.label),
-                      selected: _range.label == r.label,
+                      selected: _range!.label == r.label,
                       onSelected: (_) => setState(() => _range = r),
                     ),
                   ),
@@ -111,7 +121,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           Expanded(
             child: assetId == null
                 ? _empty(context, daily: false)
-                : _range.isDaily
+                : _range!.isDaily
                 ? _dailyChart(context, assetId)
                 : _intradayChart(context, assetId),
           ),
@@ -131,9 +141,9 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           );
         }
         final all = snap.data ?? const <DailyCandle>[];
-        final candles = _range.days == 0 || _range.days >= all.length
+        final candles = _range!.days == 0 || _range!.days >= all.length
             ? all
-            : all.sublist(all.length - _range.days);
+            : all.sublist(all.length - _range!.days);
         if (candles.length < 2) return _empty(context, daily: true);
 
         final closes = [for (final c in candles) c.close];
@@ -160,7 +170,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   Widget _intradayChart(BuildContext context, String assetId) {
     final series = ref
         .read(historyProvider)
-        .series(assetId, range: _range.intraday)
+        .series(assetId, range: _range!.intraday)
         .toList();
     if (series.length < 2) return _empty(context, daily: false);
     return Column(
