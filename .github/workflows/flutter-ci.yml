@@ -34,6 +34,11 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
+      # Analyze and test never touch Gradle, so a broken native dependency
+      # would only surface at release time. Build it here instead.
+      - name: Build APK (debug — native/Gradle gate)
+        run: flutter build apk --debug
+
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v5

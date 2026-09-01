@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/http_config.dart';
 import '../../core/utils/fa_number.dart';
+import '../../services/background_alert_worker.dart';
 import '../../services/backup_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
@@ -88,6 +89,8 @@ class SettingsScreen extends ConsumerWidget {
             value: ref.watch(tomanModeProvider),
             onChanged: (v) => ref.read(tomanModeProvider.notifier).set(v),
           ),
+          const _Header('هشدارها'),
+          const _BackgroundAlertsTile(),
           const _Header('پشتیبان‌گیری (کاملاً محلی)'),
           ListTile(
             leading: const Icon(Icons.ios_share),
@@ -123,6 +126,51 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Opt-in switch for the 15-minute background alert check.
+class _BackgroundAlertsTile extends ConsumerStatefulWidget {
+  const _BackgroundAlertsTile();
+
+  @override
+  ConsumerState<_BackgroundAlertsTile> createState() =>
+      _BackgroundAlertsTileState();
+}
+
+class _BackgroundAlertsTileState extends ConsumerState<_BackgroundAlertsTile> {
+  bool? _on;
+
+  @override
+  void initState() {
+    super.initState();
+    ref
+        .read(localStoreProvider)
+        .getString(BackgroundAlertWorker.enabledKey)
+        .then((v) {
+          if (mounted) setState(() => _on = v == '1');
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary: const Icon(Icons.notifications_active_outlined),
+      title: const Text('بررسی هشدارها در پس‌زمینه'),
+      subtitle: const Text(
+        'هر ۱۵ دقیقه قیمت‌ها چک می‌شوند و هشدار حتی با بسته بودن اپ می‌آید. بدون این گزینه، هشدار فقط وقتی اپ باز است بررسی می‌شود.',
+      ),
+      value: _on ?? false,
+      onChanged: _on == null
+          ? null
+          : (v) async {
+              setState(() => _on = v);
+              await BackgroundAlertWorker.setEnabled(
+                ref.read(localStoreProvider),
+                v,
+              );
+            },
     );
   }
 }

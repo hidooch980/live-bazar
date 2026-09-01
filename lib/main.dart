@@ -6,6 +6,7 @@ import '../core/network/http_config.dart';
 import '../data/cache/hive_market_cache.dart';
 import '../data/cache/local_state_store.dart';
 import '../services/alert_service.dart';
+import '../services/background_alert_worker.dart';
 import '../services/connectivity_service.dart';
 import '../services/historical_snapshot_service.dart';
 import '../services/market_refresh_engine.dart';
@@ -48,6 +49,12 @@ Future<void> main() async {
 
   // 4) Local notifications for price alerts (§23) — uses the tz clock.
   final notifications = NotificationService()..init(timeZone: timeZone);
+
+  // 4b) Background alert checks, only if the user switched them on.
+  // Re-applied every launch so an OS cleanup cannot silently unschedule
+  // them (§23 — an alert that needs the app open is not an alert).
+  await BackgroundAlertWorker.initialize();
+  await BackgroundAlertWorker.restore(store);
 
   // 5) Connectivity bridge: network restored -> immediate refresh (§6).
   ConnectivityService(engine).start();
