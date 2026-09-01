@@ -15,12 +15,14 @@ Production-grade **Android** market app built with **Flutter** — no backend, n
 
 | Source | Coverage | Key | Status |
 |---|---|---|---|
+| [TGJU](https://www.tgju.org) | بازار ایران: دلار/یورو/درهم/پوند/لیر/یوان آزاد، طلا ۱۸ و ۲۴، مثقال، انس طلا و نقره، سکه (امامی، بهار، نیم، ربع، گرمی) | none | ✅ live (~15s) |
 | [CoinGecko](https://api.coingecko.com) | BTC, ETH, USDT | none | ✅ enabled |
 | [ExchangeRate-API](https://open.er-api.com) | USD/EUR/GBP/AED/TRY/CNY/CAD/AUD/CHF/JPY | none | ✅ primary FX |
 | [Frankfurter (ECB)](https://frankfurter.dev) | ECB currencies subset | none | ✅ fallback FX |
-| Iranian free-market / gold / coins | — | requires credentials | ⛔ `SERVER_REQUIRED` (disabled) |
 
-Disabled sources show **DATA UNAVAILABLE** — never fake data.
+Every quote carries its provider's REAL publish timestamp. A quote older than
+30 minutes is labeled **قدیمی/STALE**, never LIVE; an asset with no working
+source shows **DATA UNAVAILABLE** — never fake data.
 
 ## Architecture (one-minute tour)
 
@@ -34,6 +36,9 @@ UI → Riverpod state → MarketRefreshEngine → ProviderScheduler/RequestLock
 - `lib/services/request_lock.dart` — no overlapping/duplicate requests (§5)
 - `lib/services/validation/` — invalid data never reaches UI (§13–15)
 - `lib/providers/adapters/` — verified keyless sources (§8–10)
+- `lib/providers/adapters/iranian_market_provider.dart` — بازار ایران live
+  feed (CDN cache-buster + Tehran→UTC clock, see
+  [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#9-iranian-market-feed-بازار-ایران))
 - `lib/data/cache/hive_market_cache.dart` — offline-first storage (§20)
 
 Why Hive CE: pure Dart (no native build deps), instant startup reads, simple JSON schema evolution. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -52,6 +57,7 @@ flutter build apk --release     # CI builds releases on tags (v*)
 - [x] Central refresh engine + request lock + rate limits
 - [x] Crypto + global currency quotes with validation/anomaly gates
 - [x] Persian RTL dashboard, market tabs, calculator
+- [x] بازار ایران زنده: دلار/ارز آزاد، طلا، مثقال، انس، سکه
 - [ ] Watchlist, price alerts (local notifications), portfolio (§22–24)
 - [ ] Charts from accumulated local history (§19, §27)
 - [ ] MOLIDO MARKET AI modules (V2, never faked in V1) (§32)

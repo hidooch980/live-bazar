@@ -186,8 +186,12 @@ class MarketRefreshEngine {
   /// Adds change metrics and anomaly state vs the previous valid quote.
   PriceQuote _annotate(PriceQuote incoming, PriceQuote? previous) {
     var q = incoming;
+    // Only derive the change metric when the provider publishes none —
+    // otherwise the real daily move (crypto 24h, TGJU intraday) would be
+    // overwritten by the delta between two polls seconds apart.
     if (previous != null &&
         previous.price > 0 &&
+        incoming.changePercent == 0 &&
         incoming.timestamp != previous.timestamp) {
       final change = incoming.price - previous.price;
       final pct = change / previous.price * 100;
@@ -197,7 +201,11 @@ class MarketRefreshEngine {
     final state = anomalySvc.assess(candidate: q, previousValid: previous);
     switch (state) {
       case AnomalyState.valid:
-        return q.copyWith(status: QuoteStatus.live);
+        // A thinly traded asset can publish a real but hours-old price —
+        // label it STALE instead of passing it off as LIVE (§13).
+        return q.copyWith(
+          status: _validation.isStale(q) ? QuoteStatus.stale : QuoteStatus.live,
+        );
       case AnomalyState.suspicious:
         // Keep last valid value; flag conflict rather than trusting it.
         if (previous != null) {

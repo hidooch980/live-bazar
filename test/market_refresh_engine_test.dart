@@ -7,6 +7,7 @@ import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/providers/iprice_provider.dart';
 import 'package:live_bazar/providers/provider_registry.dart';
 import 'package:live_bazar/services/market_refresh_engine.dart';
+import 'package:live_bazar/state/app_providers.dart';
 
 import 'fakes/fake_provider.dart';
 
@@ -177,23 +178,38 @@ void main() {
     },
   );
 
-  test('catalog only exposes verified sources as enabled (§7/§10)', () {
-    for (final def in AssetCatalog.all.where(
-      (d) =>
-          d.category == AssetCategory.gold ||
-          d.category == AssetCategory.coin ||
-          d.category == AssetCategory.iranianCurrency,
-    )) {
+  test(
+    'a real but old provider timestamp is labeled STALE, not LIVE',
+    () async {
+      final old = DateTime.now().toUtc().subtract(const Duration(hours: 3));
+      final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
+        ..behavior = (_) async =>
+            ProviderResult(quotes: [quoteFor('fx_eur', price: 1.1, ts: old)]);
+      final engine = _engine([fx]);
+
+      final snap = await engine.refresh(force: true);
+      expect(snap!.quotes['fx_eur']!.status, QuoteStatus.stale);
+      expect(
+        snap.quotes['fx_eur']!.price,
+        1.1,
+      ); // still shown, honestly labeled
+      await engine.dispose();
+    },
+  );
+
+  test('enabled assets and registered live sources match exactly (§7/§10)', () {
+    final served = <String>{
+      for (final entry in buildRegistry().entries.where((e) => e.isActive))
+        ...entry.provider.supportedAssets,
+    };
+    for (final def in AssetCatalog.all) {
       expect(
         def.enabled,
-        isFalse,
-        reason: '${def.id} must stay disabled in no-backend V1',
+        served.contains(def.id),
+        reason: '${def.id}: enabled must mean a live provider serves it',
       );
     }
-    for (final def in AssetCatalog.all.where(
-      (d) => d.category == AssetCategory.crypto,
-    )) {
-      expect(def.enabled, isTrue);
-    }
+    // The Iranian market is the reason the app exists — it must be live.
+    expect(served, containsAll(<String>['ir_usd', 'gold_18k', 'coin_emami']));
   });
 }

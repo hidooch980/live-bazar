@@ -56,8 +56,12 @@ Failures surface as `null`, never as crashes.
    >10% single-step move or timestamp regression → suspicious.
 4. Suspicious data is REPLACED by the last valid value flagged
    `dataConflict`. Nothing fabricated ever enters state (§13–15).
-5. Change% is computed only between two real observations with different
-   timestamps; otherwise the quote is UNCHANGED.
+5. Change% is taken from the provider when it publishes one (crypto 24h,
+   TGJU intraday); only when it does not is it computed between two real
+   observations with different timestamps.
+6. A quote whose REAL timestamp is older than
+   `AppConstants.staleThreshold` is labeled STALE, never LIVE — thinly
+   traded assets (quarter coin, gram coin) legitimately sit for hours.
 
 ## 6. Cache choice (§20)
 
@@ -82,9 +86,30 @@ The repository/state layer already exposes clean snapshots that a future
 MOLIDO MARKET AI module can consume. V1 ships zero AI features and never
 simulates analysis output.
 
-## 9. Deliberately disabled in V1
+## 9. Iranian market feed (بازار ایران)
 
-Iranian free-market FX, gold/coins, commodities/indices require either
-server-side credentials or scraping of unofficial sources — both violate the
-verification/security rules (§10, §33). They are declared in the catalog with
-`enabled = false`; UI shows DATA UNAVAILABLE.
+`IranianMarketProvider` serves free-market FX, gold and coins from the public
+TGJU feed (`call{1,2,3}.tgju.org/ajax.json`) — the same keyless JSON that
+tgju.org itself renders from. No key, no account, no server: the no-backend
+rule (§1) still holds.
+
+Two things make it genuinely live:
+
+- **Cache-buster.** The feed sits behind a 5-minute CDN cache; a plain GET can
+  return data ~50 minutes old. Each request carries `?v=<bucket>` where the
+  bucket is `now / AppConstants.iranianMarketCacheBucket` (10s). Freshness is
+  bounded by the bucket, and every client inside one bucket shares a single
+  CDN object instead of hammering the origin.
+- **Tehran clock.** Feed timestamps are Tehran wall-clock; they are converted
+  to UTC (tz `Asia/Tehran`, falling back to the fixed +03:30 offset) before
+  the validation and staleness gates see them.
+
+Rial is converted to Toman at parse time (the catalog and the whole display
+path are Toman); the global ounces (`ons`, `silver`) stay in USD as published.
+Poll cadence is `AppConstants.iranianMarketMinInterval` (15s) — one ~27 KB
+gzipped response per poll.
+
+Still deliberately unsupported: commodities/indices with no verified keyless
+source. `ServerRequiredProvider` remains the mechanism for those — declared in
+the catalog with `enabled = false`, UI shows DATA UNAVAILABLE. Nothing is ever
+fabricated to fill a gap.

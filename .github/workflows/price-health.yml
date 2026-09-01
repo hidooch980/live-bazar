@@ -34,6 +34,16 @@ jobs:
           echo "status=$code" >> "$GITHUB_OUTPUT"
           test "$code" = "200"
 
+      # Non-fatal: a TGJU outage must not block the crypto/FX snapshot.
+      # The bucketed cache-buster mirrors the app (see IranianMarketProvider).
+      - name: TGJU Iranian market health
+        id: tgju
+        continue-on-error: true
+        run: |
+          code=$(curl -s -o /tmp/ir.json -w '%{http_code}'             "https://call1.tgju.org/ajax.json?v=$(( $(date +%s) / 10 ))")
+          echo "status=$code" >> "$GITHUB_OUTPUT"
+          test "$code" = "200"
+
       - name: Build static snapshot (fallback only)
         if: success()
         run: |
@@ -78,6 +88,65 @@ jobs:
                       'status': 'LIVE', 'confidence': 1.0,
                   }
 
+          # ---- Iranian free market / gold / coins (TGJU, Rial -> Toman) ----
+          # (id, symbol, name, nameFa, category, unit, currency)
+          ir_map = {
+            'price_dollar_rl': ('ir_usd','USD/IRR-FM','US Dollar (Free Market)','دلار آمریکا (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_eur': ('ir_eur','EUR/IRR-FM','Euro (Free Market)','یورو (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_aed': ('ir_aed','AED/IRR-FM','UAE Dirham (Free Market)','درهم امارات (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_gbp': ('ir_gbp','GBP/IRR-FM','British Pound (Free Market)','پوند انگلیس (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_try': ('ir_try','TRY/IRR-FM','Turkish Lira (Free Market)','لیر ترکیه (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_cny': ('ir_cny','CNY/IRR-FM','Chinese Yuan (Free Market)','یوان چین (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'geram18': ('gold_18k','GOLD-18K','Gold 18K','طلای ۱۸ عیار','gold','گرم','IRR'),
+            'geram24': ('gold_24k','GOLD-24K','Gold 24K','طلای ۲۴ عیار','gold','گرم','IRR'),
+            'mesghal': ('mesghal','MESGHAL','Mesghal Gold','مثقال طلا','gold','مثقال','IRR'),
+            'ons': ('xau_usd','XAU/USD','Gold Ounce / USD','انس جهانی طلا','gold','اونس','USD'),
+            'silver': ('silver','XAG/USD','Silver Ounce / USD','انس جهانی نقره','gold','اونس','USD'),
+            'sekee': ('coin_emami','COIN-EMAMI','Emami Coin','سکه امامی','coin','عدد','IRR'),
+            'sekeb': ('coin_bahar','COIN-BAHAR','Bahare Azadi Coin','سکه بهاره آزادی','coin','عدد','IRR'),
+            'nim': ('coin_half','COIN-HALF','Half Coin','نیم سکه','coin','عدد','IRR'),
+            'rob': ('coin_quarter','COIN-QUARTER','Quarter Coin','ربع سکه','coin','عدد','IRR'),
+            'gerami': ('coin_gram','COIN-GRAM','Gram Gold Coin','سکه گرمی','coin','عدد','IRR'),
+          }
+          # Tehran wall-clock -> UTC (fixed +03:30, no DST since 2022).
+          tehran = datetime.timezone(datetime.timedelta(hours=3, minutes=30))
+          try:
+              with open('/tmp/ir.json', encoding='utf-8') as fh:
+                  ir = json.load(fh).get('current', {})
+          except Exception as e:
+              ir = {}
+              print(f'tgju unavailable: {e}')
+          for key, meta in ir_map.items():
+              row = ir.get(key)
+              if not isinstance(row, dict):
+                  continue
+              try:
+                  raw = float(str(row.get('p', '')).replace(',', ''))
+              except ValueError:
+                  continue
+              if raw <= 0:
+                  continue
+              aid, sym, name, name_fa, cat, unit, cur = meta
+              div = 10.0 if cur == 'IRR' else 1.0
+              sign = -1 if row.get('dt') == 'low' else 1
+              try:
+                  ts_ir = datetime.datetime.strptime(
+                      row['ts'], '%Y-%m-%d %H:%M:%S'
+                  ).replace(tzinfo=tehran).astimezone(
+                      datetime.timezone.utc
+                  ).strftime('%Y-%m-%dT%H:%M:%SZ')
+              except (KeyError, TypeError, ValueError):
+                  ts_ir = now
+              quotes[aid] = {
+                  'id': aid, 'symbol': sym, 'name': name, 'nameFa': name_fa,
+                  'category': cat,
+                  'price': round(raw / div, 2),
+                  'changePercent': float(row.get('dp') or 0) * sign,
+                  'unit': unit, 'currency': cur,
+                  'timestamp': ts_ir, 'source': 'TGJU',
+                  'status': 'LIVE', 'confidence': 1.0,
+              }
+
           snap = {
               'timestamp': now,
               'source': 'github-actions-static-snapshot',
@@ -86,7 +155,9 @@ jobs:
           }
           p = pathlib.Path('data/latest.json')
           p.parent.mkdir(parents=True, exist_ok=True)
-          p.write_text(json.dumps(snap, ensure_ascii=False, indent=2))
+          p.write_text(
+              json.dumps(snap, ensure_ascii=False, indent=2), encoding='utf-8'
+          )
           print(f'wrote {len(quotes)} quotes')
           PY
 
