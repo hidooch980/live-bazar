@@ -3,7 +3,7 @@ import 'package:live_bazar/data/cache/local_state_store.dart';
 import 'package:live_bazar/services/market_history_service.dart';
 
 /// Shape-accurate excerpt of
-/// api.tgju.org/v1/market/indicator/summary-table-data/<key>:
+/// `api.tgju.org/v1/market/indicator/summary-table-data/<key>`:
 /// [open, low, high, close, changeHtml, percentHtml, gregorian, jalali],
 /// newest first.
 List<dynamic> _rows() => [
