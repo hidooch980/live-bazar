@@ -4,6 +4,29 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [0.3.0] — 2026-09-01
+
+### Added
+- **صفحه خانه بازارها را نشان می‌دهد.** The dashboard now has real market
+  blocks — بازار آزاد, طلا, سکه, کریپتو and ارز جهانی — each listing every
+  enabled asset of its category instead of the four hardcoded headline
+  symbols.
+- **شخصی‌سازی خانه (home personalization).** A new screen (tune icon on the
+  dashboard, or Settings › شخصی‌سازی) turns any block on/off and drag-reorders
+  them. Stored locally like every other preference; «پیش‌فرض» restores the
+  shipped layout. Unknown/missing entries in a stored layout are tolerated, so
+  a block added by a later app version appears instead of resetting the
+  user's choices.
+
+### Fixed
+- **A preference changed during startup was silently reverted.** Both the home
+  layout and the Toman/USD toggle load from disk asynchronously; a choice made
+  while that read was still in flight got clobbered by the stale value. Loads
+  now carry a generation stamp and are dropped once superseded.
+- Removed the dashboard notice claiming the Iranian market, gold and coins are
+  unavailable — untrue since 0.2.0 — and the matching Settings entry, which
+  still described the market as `SERVER_REQUIRED`.
+
 ## [0.2.0] — 2026-09-01
 
 ### Added

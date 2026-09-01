@@ -10,6 +10,8 @@ import '../../state/app_providers.dart';
 import '../../widgets/quote_tile.dart';
 import '../alerts/alerts_screen.dart';
 import '../portfolio/portfolio_screen.dart';
+import 'customize_home_screen.dart';
+import 'home_layout.dart';
 
 /// HOME DASHBOARD (§30).
 class HomeScreen extends ConsumerWidget {
@@ -28,11 +30,19 @@ class HomeScreen extends ConsumerWidget {
           ];
     final pulse = MarketPulse.compute(quotes);
     final watchlistIds = ref.watch(watchlistControllerProvider);
+    final layout = ref.watch(homeLayoutProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('بازار مولیدو'),
         actions: [
+          IconButton(
+            tooltip: 'شخصی‌سازی خانه',
+            icon: const Icon(Icons.tune),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'پورتفولیو',
             icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -73,33 +83,15 @@ class HomeScreen extends ConsumerWidget {
                 timestamp: _latestTimestamp(quotes),
                 latencyMs: snap.latencyMs,
               ),
-              _PulseCard(pulse: pulse),
-              _ProviderDiagnostics(
-                status: Map.of(ref.watch(refreshEngineProvider).providerStatus),
-              ),
-              if (watchlistIds.isNotEmpty) ...[
-                const _SectionTitle('علاقه‌مندی‌ها'),
-                for (final id in watchlistIds)
-                  if (snap.quotes[id] != null)
-                    QuoteTile(
-                      quote: snap.quotes[id]!,
-                      isFavorite: true,
-                      onToggleFavorite: () => ref
-                          .read(watchlistControllerProvider.notifier)
-                          .toggle(id),
-                    ),
-              ],
-              const _SectionTitle('شاخص‌های اصلی'),
-              for (final id in ['fx_usd', 'fx_eur', 'btc_usd', 'usdt_usd'])
-                if (snap.quotes[id] != null)
-                  QuoteTile(
-                    quote: snap.quotes[id]!,
-                    isFavorite: ref.watch(watchlistProvider).contains(id),
-                    onToggleFavorite: () => ref
-                        .read(watchlistControllerProvider.notifier)
-                        .toggle(id),
-                  ),
-              const _DisabledNotice(),
+              for (final section in layout.visible)
+                ..._blocksFor(
+                  ref: ref,
+                  section: section,
+                  snapshot: snap,
+                  pulse: pulse,
+                  watchlistIds: watchlistIds,
+                ),
+              if (layout.visible.isEmpty) const _EmptyLayoutNotice(),
             ] else
               SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.5,
@@ -123,6 +115,59 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// Widgets for one personalized dashboard block. Market sections render
+  /// every enabled asset of their category that actually has a quote — an
+  /// empty section simply disappears instead of showing placeholders.
+  List<Widget> _blocksFor({
+    required WidgetRef ref,
+    required HomeSection section,
+    required MarketSnapshotLike snapshot,
+    required MarketPulse pulse,
+    required List<String> watchlistIds,
+  }) {
+    switch (section) {
+      case HomeSection.pulse:
+        return [_PulseCard(pulse: pulse)];
+      case HomeSection.diagnostics:
+        return [
+          _ProviderDiagnostics(
+            status: Map.of(ref.watch(refreshEngineProvider).providerStatus),
+          ),
+        ];
+      case HomeSection.watchlist:
+        final favorites = [
+          for (final id in watchlistIds)
+            if (snapshot.quotes[id] != null) snapshot.quotes[id]!,
+        ];
+        if (favorites.isEmpty) return const [];
+        return [
+          _SectionTitle(section.titleFa),
+          for (final q in favorites) _tile(ref, q, watchlistIds),
+        ];
+      default:
+        final quotes = [
+          for (final def in AssetCatalog.all)
+            if (def.enabled &&
+                def.category == section.category &&
+                snapshot.quotes[def.id] != null)
+              snapshot.quotes[def.id]!,
+        ];
+        if (quotes.isEmpty) return const [];
+        return [
+          _SectionTitle(section.titleFa),
+          for (final q in quotes) _tile(ref, q, watchlistIds),
+        ];
+    }
+  }
+
+  Widget _tile(WidgetRef ref, PriceQuote quote, List<String> watchlistIds) =>
+      QuoteTile(
+        quote: quote,
+        isFavorite: watchlistIds.contains(quote.id),
+        onToggleFavorite: () =>
+            ref.read(watchlistControllerProvider.notifier).toggle(quote.id),
+      );
 
   DateTime? _latestTimestamp(List<PriceQuote> quotes) {
     DateTime? t;
@@ -376,8 +421,9 @@ class _PulseCard extends StatelessWidget {
   );
 }
 
-class _DisabledNotice extends StatelessWidget {
-  const _DisabledNotice();
+/// Shown when the user has switched every block off.
+class _EmptyLayoutNotice extends StatelessWidget {
+  const _EmptyLayoutNotice();
 
   @override
   Widget build(BuildContext context) {
@@ -386,15 +432,11 @@ class _DisabledNotice extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              size: 18,
-              color: Theme.of(context).hintColor,
-            ),
+            Icon(Icons.tune, size: 18, color: Theme.of(context).hintColor),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'بازار آزاد ایران، طلا و سکه در نسخه اول نیازمند منبع تأییدشده هستند و نمایش داده نمی‌شوند. هیچ داده جعلی نمایش داده نمی‌شود.',
+                'همه بخش‌های خانه خاموش‌اند. از «شخصی‌سازی خانه» در نوار بالا هر بخشی را که می‌خواهی روشن کن.',
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(context).hintColor,

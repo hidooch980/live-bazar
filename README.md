@@ -57,6 +57,7 @@ flutter build apk --release     # CI builds releases on tags (v*)
 - [x] Central refresh engine + request lock + rate limits
 - [x] Crypto + global currency quotes with validation/anomaly gates
 - [x] Persian RTL dashboard, market tabs, calculator
+- [x] داشبورد بازارمحور + شخصی‌سازی خانه (نمایش و ترتیب بخش‌ها)
 - [x] بازار ایران زنده: دلار/ارز آزاد، طلا، مثقال، انس، سکه
 - [ ] Watchlist, price alerts (local notifications), portfolio (§22–24)
 - [ ] Charts from accumulated local history (§19, §27)

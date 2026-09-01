@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/network/http_config.dart';
+import '../../core/utils/fa_number.dart';
 import '../../services/backup_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
+import '../home/customize_home_screen.dart';
+import '../home/home_layout.dart';
 import '../update/update_flow.dart';
 
 /// SETTINGS (§28, §34): privacy-first, local-only.
@@ -59,10 +62,10 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const ListTile(
-            leading: Icon(Icons.block),
+            leading: Icon(Icons.attach_money),
             title: Text('بازار آزاد ایران، طلا و سکه'),
             subtitle: Text(
-              'غیرفعال در نسخه اول: منبع رسمی بدون کلید موجود نیست (SERVER_REQUIRED)',
+              'TGJU — سه آینه با جایگزینی خودکار؛ زمان انتشار واقعی منبع. داده کهنه‌تر از ۳۰ دقیقه «قدیمی» برچسب می‌خورد.',
             ),
           ),
           const _Header('سیکل به‌روزرسانی'),
@@ -73,6 +76,8 @@ class SettingsScreen extends ConsumerWidget {
               'هر منبع با فاصله مجاز خودش فراخوانی می‌شود؛ هیچ درخواست تکراری یا موازی ارسال نمی‌شود.',
             ),
           ),
+          const _Header('شخصی‌سازی'),
+          _HomeLayoutTile(),
           const _Header('نمایش قیمت'),
           SwitchListTile(
             secondary: const Icon(Icons.currency_exchange),
@@ -118,6 +123,26 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Entry point to the home dashboard personalization screen.
+class _HomeLayoutTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final layout = ref.watch(homeLayoutProvider);
+    final on = layout.visible.length;
+    final total = layout.order.length;
+    return ListTile(
+      leading: const Icon(Icons.tune),
+      title: const Text('شخصی‌سازی صفحه خانه'),
+      subtitle: Text(
+        '${on.faDigits} بخش از ${total.faDigits} روشن — ترتیب و نمایش بازار آزاد، طلا، سکه، کریپتو و ارز جهانی',
+      ),
+      trailing: const Icon(Icons.chevron_left),
+      onTap: () => Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const CustomizeHomeScreen())),
     );
   }
 }
