@@ -46,3 +46,12 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Release signing material — NEVER commit. CI restores it from repository
+# secrets (KEYSTORE_BASE64 + KEYSTORE_PASSWORD); keep your own backup of
+# the keystore outside this repo or you can never ship an update again.
+android/key.properties
+android/keystore/
+*.jks
+*.p12
+*.keystore
