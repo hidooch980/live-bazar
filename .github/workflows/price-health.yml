@@ -107,6 +107,20 @@ jobs:
             'nim': ('coin_half','COIN-HALF','Half Coin','نیم سکه','coin','عدد','IRR'),
             'rob': ('coin_quarter','COIN-QUARTER','Quarter Coin','ربع سکه','coin','عدد','IRR'),
             'gerami': ('coin_gram','COIN-GRAM','Gram Gold Coin','سکه گرمی','coin','عدد','IRR'),
+            'price_cad': ('ir_cad','CAD/IRR-FM','Canadian Dollar (Free Market)','دلار کانادا (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_aud': ('ir_aud','AUD/IRR-FM','Australian Dollar (Free Market)','دلار استرالیا (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_chf': ('ir_chf','CHF/IRR-FM','Swiss Franc (Free Market)','فرانک سوئیس (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_jpy': ('ir_jpy','JPY100/IRR-FM','Japanese Yen per 100 (Free Market)','ین ژاپن، هر ۱۰۰ ین (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_rub': ('ir_rub','RUB/IRR-FM','Russian Ruble (Free Market)','روبل روسیه (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_iqd': ('ir_iqd','IQD/IRR-FM','Iraqi Dinar (Free Market)','دینار عراق (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'price_afn': ('ir_afn','AFN/IRR-FM','Afghan Afghani (Free Market)','افغانی افغانستان (بازار آزاد)','iranianCurrency','تومان','IRR'),
+            'gold_futures': ('gold_abshodeh','ABSHODEH','Melted Gold (spot)','آبشده نقدی','gold','مثقال','IRR'),
+            'retail_sekee': ('coin_emami_retail','COIN-EMAMI-RETAIL','Emami Coin (retail)','سکه امامی (خرده‌فروشی)','coin','عدد','IRR'),
+            'nim_blubber': ('coin_half_bubble','COIN-HALF-BUBBLE','Half Coin bubble','حباب نیم سکه','coin','تومان','IRR'),
+            'rob_blubber': ('coin_quarter_bubble','COIN-QUARTER-BUBBLE','Quarter Coin bubble','حباب ربع سکه','coin','تومان','IRR'),
+            'bourse': ('bourse_index','TEDPIX','Tehran Stock Exchange index','شاخص کل بورس','marketIndex','واحد','IDX'),
+            'oil_brent': ('oil_brent','BRENT','Brent crude','نفت برنت','commodity','بشکه','USD'),
+            'oil': ('oil_wti','WTI','WTI crude','نفت وست تگزاس','commodity','بشکه','USD'),
           }
           # Tehran wall-clock -> UTC (fixed +03:30, no DST since 2022).
           tehran = datetime.timezone(datetime.timedelta(hours=3, minutes=30))

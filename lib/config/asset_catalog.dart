@@ -16,6 +16,7 @@ class AssetDefinition {
     required this.unit,
     required this.currency,
     this.enabled = true,
+    this.tradable = true,
   });
 
   final String id;
@@ -26,6 +27,11 @@ class AssetDefinition {
   final String unit;
   final String currency;
   final bool enabled;
+
+  /// False for observations you cannot hold: a market index or a coin
+  /// bubble is a real published number, but it is not a position, so the
+  /// portfolio and the converter leave it out.
+  final bool tradable;
 }
 
 abstract final class AssetCatalog {
@@ -100,6 +106,71 @@ abstract final class AssetCatalog {
       unit: 'تومان',
       currency: 'IRR',
     ),
+    AssetDefinition(
+      id: 'ir_cad',
+      symbol: 'CAD/IRR-FM',
+      name: 'Canadian Dollar (Free Market)',
+      nameFa: 'دلار کانادا (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
+      id: 'ir_aud',
+      symbol: 'AUD/IRR-FM',
+      name: 'Australian Dollar (Free Market)',
+      nameFa: 'دلار استرالیا (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
+      id: 'ir_chf',
+      symbol: 'CHF/IRR-FM',
+      name: 'Swiss Franc (Free Market)',
+      nameFa: 'فرانک سوئیس (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    // TGJU publishes the yen per 100 units — the name says so, because the
+    // number on screen is the price of 100 yen, not one.
+    AssetDefinition(
+      id: 'ir_jpy',
+      symbol: 'JPY100/IRR-FM',
+      name: 'Japanese Yen per 100 (Free Market)',
+      nameFa: 'ین ژاپن، هر ۱۰۰ ین (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
+      id: 'ir_rub',
+      symbol: 'RUB/IRR-FM',
+      name: 'Russian Ruble (Free Market)',
+      nameFa: 'روبل روسیه (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
+      id: 'ir_iqd',
+      symbol: 'IQD/IRR-FM',
+      name: 'Iraqi Dinar (Free Market)',
+      nameFa: 'دینار عراق (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
+      id: 'ir_afn',
+      symbol: 'AFN/IRR-FM',
+      name: 'Afghan Afghani (Free Market)',
+      nameFa: 'افغانی افغانستان (بازار آزاد)',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
   ];
 
   // ---- GOLD & COINS (verified keyless: TGJU live feed) ----
@@ -150,6 +221,15 @@ abstract final class AssetCatalog {
       currency: 'USD',
     ),
     AssetDefinition(
+      id: 'gold_abshodeh',
+      symbol: 'ABSHODEH',
+      name: 'Melted Gold (spot)',
+      nameFa: 'آبشده نقدی',
+      category: AssetCategory.gold,
+      unit: 'مثقال',
+      currency: 'IRR',
+    ),
+    AssetDefinition(
       id: 'coin_emami',
       symbol: 'COIN-EMAMI',
       name: 'Emami Coin',
@@ -194,6 +274,38 @@ abstract final class AssetCatalog {
       unit: 'عدد',
       currency: 'IRR',
     ),
+    AssetDefinition(
+      id: 'coin_emami_retail',
+      symbol: 'COIN-EMAMI-RETAIL',
+      name: 'Emami Coin (retail)',
+      nameFa: 'سکه امامی (خرده‌فروشی)',
+      category: AssetCategory.coin,
+      unit: 'عدد',
+      currency: 'IRR',
+    ),
+    // «حباب» is published by TGJU itself — the premium over intrinsic gold
+    // value. Real quoted data, not something this app computes. Not a
+    // position you can hold, so it stays out of the portfolio/converter.
+    AssetDefinition(
+      id: 'coin_half_bubble',
+      symbol: 'COIN-HALF-BUBBLE',
+      name: 'Half Coin bubble',
+      nameFa: 'حباب نیم سکه',
+      category: AssetCategory.coin,
+      unit: 'تومان',
+      currency: 'IRR',
+      tradable: false,
+    ),
+    AssetDefinition(
+      id: 'coin_quarter_bubble',
+      symbol: 'COIN-QUARTER-BUBBLE',
+      name: 'Quarter Coin bubble',
+      nameFa: 'حباب ربع سکه',
+      category: AssetCategory.coin,
+      unit: 'تومان',
+      currency: 'IRR',
+      tradable: false,
+    ),
   ];
 
   // ---- CRYPTO (verified: CoinGecko public API) ----
@@ -227,15 +339,51 @@ abstract final class AssetCatalog {
     ),
   ];
 
-  // ---- GLOBAL commodities/indices (no verified keyless source -> off) ----
-  static const global = <AssetDefinition>[];
+  // ---- INDEX (verified keyless: TGJU live feed) ----
+  // Index points, NOT Rial: currency 'IDX' keeps it out of every
+  // Rial->Toman conversion path.
+  static const indices = <AssetDefinition>[
+    AssetDefinition(
+      id: 'bourse_index',
+      symbol: 'TEDPIX',
+      name: 'Tehran Stock Exchange index',
+      nameFa: 'شاخص کل بورس',
+      category: AssetCategory.marketIndex,
+      unit: 'واحد',
+      currency: 'IDX',
+      tradable: false,
+    ),
+  ];
+
+  // ---- COMMODITY (verified keyless: TGJU live feed, USD per barrel) ----
+  static const commodities = <AssetDefinition>[
+    AssetDefinition(
+      id: 'oil_brent',
+      symbol: 'BRENT',
+      name: 'Brent crude',
+      nameFa: 'نفت برنت',
+      category: AssetCategory.commodity,
+      unit: 'بشکه',
+      currency: 'USD',
+    ),
+    AssetDefinition(
+      id: 'oil_wti',
+      symbol: 'WTI',
+      name: 'WTI crude',
+      nameFa: 'نفت وست تگزاس',
+      category: AssetCategory.commodity,
+      unit: 'بشکه',
+      currency: 'USD',
+    ),
+  ];
 
   static const all = <AssetDefinition>[
     ...globalCurrencies,
     ...iranianMarket,
     ...goldAndCoins,
     ...crypto,
-    ...global,
+    ...indices,
+    ...commodities,
   ];
 
   static AssetDefinition? byId(String id) {

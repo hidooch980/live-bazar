@@ -24,7 +24,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final state = ref.watch(marketControllerProvider);
     final snap = state.snapshot;
     final options = <(String, String)>[
-      for (final d in AssetCatalog.all.where((d) => d.enabled))
+      for (final d in AssetCatalog.all.where((d) => d.enabled && d.tradable))
         if (snap?.quotes[d.id] != null) (d.id, '${d.nameFa} (${d.symbol})'),
     ];
 

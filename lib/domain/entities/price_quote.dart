@@ -13,7 +13,16 @@ enum QuoteStatus {
   serverRequired,
 }
 
-enum AssetCategory { currency, iranianCurrency, gold, coin, crypto, global }
+enum AssetCategory {
+  currency,
+  iranianCurrency,
+  gold,
+  coin,
+  crypto,
+  marketIndex,
+  commodity,
+  global,
+}
 
 enum AnomalyState { valid, suspicious, rejected }
 

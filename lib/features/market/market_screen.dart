@@ -27,6 +27,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     (AssetCategory.gold, 'طلا'),
     (AssetCategory.coin, 'سکه'),
     (AssetCategory.crypto, 'کریپتو'),
+    (AssetCategory.marketIndex, 'شاخص'),
+    (AssetCategory.commodity, 'نفت'),
   ];
 
   @override

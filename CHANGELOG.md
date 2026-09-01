@@ -4,6 +4,28 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **۱۴ دارایی تازه از همان فید.** The TGJU response already carried 963
+  indicators while the app read 16 of them. Now also live, at no extra
+  network cost: شاخص کل بورس, نفت برنت و WTI, آبشده نقدی, سکه امامی
+  خرده‌فروشی, حباب نیم و ربع سکه, and the free-market rates for
+  کانادا/استرالیا/سوئیس/ژاپن/روسیه/عراق/افغانستان.
+- New `شاخص` and `نفت و کالا` categories, with matching market tabs and
+  home blocks (switchable and reorderable like every other block).
+- `AssetDefinition.tradable`: a market index or a coin bubble is a real
+  published number but not a position, so the portfolio and the converter
+  leave those out while alerts and charts still cover them.
+
+### Notes on units — each verified against the live feed
+- The yen is published **per 100 units**; its name says so, otherwise the
+  number reads 100× wrong.
+- Index points and USD-per-barrel are not Rial and are never divided by 10;
+  the divisor keys off the catalog currency, and `bourse_index` uses `IDX`
+  so it stays out of every Toman conversion path.
+- حباب is published by TGJU itself — this app does not compute it.
+
 ## [0.3.1] — 2026-09-01
 
 ### Fixed
