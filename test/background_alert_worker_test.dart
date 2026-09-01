@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:live_bazar/core/errors/app_exception.dart';
 import 'package:live_bazar/data/cache/local_state_store.dart';
 import 'package:live_bazar/domain/entities/alert_rule.dart';
 import 'package:live_bazar/domain/entities/price_quote.dart';
@@ -58,7 +59,10 @@ class _StubProvider implements IPriceProvider {
   Future<ProviderResult> getLatestPrices(Set<String> assetIds) async {
     lastRequested = assetIds;
     if (fails) {
-      return const ProviderResult(quotes: [], error: null);
+      return const ProviderResult(
+        quotes: [],
+        error: AppException(AppErrorCode.network, 'stub down'),
+      );
     }
     return ProviderResult(
       quotes: [
@@ -186,6 +190,23 @@ void main() {
     expect(first, 1);
     expect(second, 0, reason: 'cooldown must persist across wake-ups');
     expect(notifier.fired.length, 1);
+  });
+
+  test('a provider failure notifies nothing rather than guessing', () async {
+    final store = InMemoryKeyValueStore();
+    await _withRule(store, 'ir_usd', AlertType.priceAbove, 200000);
+    final notifier = _RecordingNotifier();
+
+    final count = await runBackgroundAlertCheck(
+      store: store,
+      notifications: notifier,
+      providers: [
+        _StubProvider('ir', {'ir_usd'}, {'ir_usd': 214000}, fails: true),
+      ],
+    );
+
+    expect(count, 0);
+    expect(notifier.fired, isEmpty);
   });
 
   test('the opt-in preference round-trips through the local store', () async {
