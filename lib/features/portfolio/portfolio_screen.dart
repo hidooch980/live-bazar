@@ -74,7 +74,9 @@ class PortfolioScreen extends ConsumerWidget {
             'افزودن/ویرایش دارایی',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          for (final def in AssetCatalog.all.where((d) => d.enabled))
+          for (final def in AssetCatalog.all.where(
+            (d) => d.enabled && d.tradable,
+          ))
             _HoldingEditor(defId: def.id, nameFa: def.nameFa),
           const SizedBox(height: 16),
           if (holdings.isEmpty)

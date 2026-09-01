@@ -32,6 +32,30 @@ Map<String, dynamic> _feed() => {
     },
     'sekee': {'p': '۲,۲۱۹,۸۵۰,۰۰۰', 'dp': 0, 'dt': '', 'ts': ''},
     'nim': {'p': '-', 'dp': 0, 'dt': ''},
+    'price_jpy': {
+      'p': '131,750',
+      'dp': 0.4,
+      'dt': 'high',
+      'ts': '2026-09-01 13:56:26',
+    },
+    'bourse': {
+      'p': '6,583,932.3',
+      'dp': 1.1,
+      'dt': 'high',
+      'ts': '2026-09-01 13:56:26',
+    },
+    'oil_brent': {
+      'p': '94.218',
+      'dp': 0.6,
+      'dt': 'low',
+      'ts': '2026-09-01 13:55:15',
+    },
+    'nim_blubber': {
+      'p': '38,000,000',
+      'dp': 0.2,
+      'dt': 'high',
+      'ts': '2026-09-01 13:56:24',
+    },
     'gold_futures': {'p': '960,590,000', 'dp': 0.21, 'dt': 'high'},
   },
 };
@@ -115,6 +139,44 @@ void main() {
       ),
       isEmpty,
     );
+  });
+
+  test('index points and USD barrels are never divided by 10', () {
+    final quotes = parse();
+    final bourse = quotes.firstWhere((q) => q.id == 'bourse_index');
+    expect(bourse.price, 6583932.3);
+    expect(bourse.currency, 'IDX');
+    expect(bourse.unit, 'واحد');
+
+    final brent = quotes.firstWhere((q) => q.id == 'oil_brent');
+    expect(brent.price, 94.218);
+    expect(brent.currency, 'USD');
+  });
+
+  test('the yen is carried per 100 units, as the feed publishes it', () {
+    final jpy = parse().firstWhere((q) => q.id == 'ir_jpy');
+    expect(jpy.price, 13175); // 131,750 Rial for 100 yen -> Toman
+    // The name must carry the multiple, or the number reads 100x wrong.
+    expect(jpy.nameFa, contains('۱۰۰'));
+  });
+
+  test('TGJU-published coin bubbles come through in Toman', () {
+    final bubble = parse().firstWhere((q) => q.id == 'coin_half_bubble');
+    expect(bubble.price, 3800000);
+    expect(bubble.source, 'TGJU');
+  });
+
+  test('non-holdable observations stay out of portfolio and converter', () {
+    for (final id in [
+      'bourse_index',
+      'coin_half_bubble',
+      'coin_quarter_bubble',
+    ]) {
+      expect(AssetCatalog.byId(id)!.tradable, isFalse, reason: id);
+    }
+    for (final id in ['ir_usd', 'gold_18k', 'coin_emami', 'oil_brent']) {
+      expect(AssetCatalog.byId(id)!.tradable, isTrue, reason: id);
+    }
   });
 
   test('number parsing rejects junk', () {

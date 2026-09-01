@@ -50,18 +50,36 @@ class IranianMarketProvider implements IPriceProvider {
     'price_gbp': 'ir_gbp',
     'price_try': 'ir_try',
     'price_cny': 'ir_cny',
+    'price_cad': 'ir_cad',
+    'price_aud': 'ir_aud',
+    'price_chf': 'ir_chf',
+    // TGJU quotes the yen per 100 units; the catalog name says so.
+    'price_jpy': 'ir_jpy',
+    'price_rub': 'ir_rub',
+    'price_iqd': 'ir_iqd',
+    'price_afn': 'ir_afn',
     // Gold in Rial, plus the global ounces in USD.
     'geram18': 'gold_18k',
     'geram24': 'gold_24k',
     'mesghal': 'mesghal',
     'ons': 'xau_usd',
     'silver': 'silver',
+    'gold_futures': 'gold_abshodeh',
     // Coins (Rial).
     'sekee': 'coin_emami',
     'sekeb': 'coin_bahar',
     'nim': 'coin_half',
     'rob': 'coin_quarter',
     'gerami': 'coin_gram',
+    'retail_sekee': 'coin_emami_retail',
+    // Premiums published by TGJU, not computed here.
+    'nim_blubber': 'coin_half_bubble',
+    'rob_blubber': 'coin_quarter_bubble',
+    // Index points and USD-per-barrel: neither is Rial, so neither is
+    // divided — the divisor keys off the catalog currency.
+    'bourse': 'bourse_index',
+    'oil_brent': 'oil_brent',
+    'oil': 'oil_wti',
   };
 
   static const sourceName = 'TGJU';

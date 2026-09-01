@@ -101,6 +101,8 @@ class CustomizeHomeScreen extends ConsumerWidget {
     HomeSection.coin => Icons.monetization_on_outlined,
     HomeSection.crypto => Icons.currency_bitcoin,
     HomeSection.globalCurrency => Icons.public,
+    HomeSection.bourse => Icons.show_chart,
+    HomeSection.commodity => Icons.local_gas_station_outlined,
     HomeSection.diagnostics => Icons.health_and_safety_outlined,
   };
 

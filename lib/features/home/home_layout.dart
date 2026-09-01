@@ -14,6 +14,8 @@ enum HomeSection {
   coin('سکه', AssetCategory.coin),
   crypto('کریپتو', AssetCategory.crypto),
   globalCurrency('ارز جهانی', AssetCategory.currency),
+  bourse('شاخص بورس', AssetCategory.marketIndex),
+  commodity('نفت و کالا', AssetCategory.commodity),
   diagnostics('وضعیت منابع', null);
 
   const HomeSection(this.titleFa, this.category);
