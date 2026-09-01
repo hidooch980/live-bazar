@@ -36,12 +36,12 @@ class QuoteTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final useToman = ref.watch(tomanModeProvider);
-    final irr = irrQuoteOf(ref.watch(marketControllerProvider).snapshot);
+    final rate = tomanRateOf(ref.watch(marketControllerProvider).snapshot);
 
     String primary;
     String? secondary;
     if (useToman) {
-      final t = PriceDisplay.toman(quote, irr);
+      final t = PriceDisplay.toman(quote, rate);
       if (t != null) {
         primary = '${PriceDisplay.tomanText(t)} ${PriceDisplay.tomanUnit}';
         secondary = '${quote.price.faPrice()} ${quote.currency}';

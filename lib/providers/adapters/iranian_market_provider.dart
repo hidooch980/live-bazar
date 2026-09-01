@@ -59,6 +59,8 @@ class IranianMarketProvider implements IPriceProvider {
     'price_rub': 'ir_rub',
     'price_iqd': 'ir_iqd',
     'price_afn': 'ir_afn',
+    // 24/7 — the only Toman quote still moving after the bazaar closes.
+    'crypto-tether-irr': 'usdt_irt',
     // Gold in Rial, plus the global ounces in USD.
     'geram18': 'gold_18k',
     'geram24': 'gold_24k',

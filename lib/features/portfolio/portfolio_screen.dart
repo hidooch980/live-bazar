@@ -18,12 +18,12 @@ class PortfolioScreen extends ConsumerWidget {
 
     final valuation = portfolio.value(market.snapshot?.quotes ?? const {});
     final useToman = ref.watch(tomanModeProvider);
-    final irr = irrQuoteOf(market.snapshot);
+    final rate = tomanRateOf(market.snapshot);
 
     String totalText;
     String unitText;
-    if (useToman && irr != null) {
-      final t = valuation.totalValue * irr.price / 10;
+    if (useToman && rate != null) {
+      final t = valuation.totalValue * rate.tomanPerUsd;
       totalText = PriceDisplay.tomanText(t);
       unitText = PriceDisplay.tomanUnit;
     } else {

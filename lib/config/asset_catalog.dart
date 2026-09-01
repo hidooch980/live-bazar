@@ -162,6 +162,18 @@ abstract final class AssetCatalog {
       unit: 'تومان',
       currency: 'IRR',
     ),
+    // Trades around the clock, unlike every other Iranian-market row. At
+    // night this is the only live Toman price the market offers, and it is
+    // what the free-market dollar is read from once the bazaar closes.
+    AssetDefinition(
+      id: 'usdt_irt',
+      symbol: 'USDT/IRT',
+      name: 'Tether in Toman',
+      nameFa: 'تتر (تومان) — ۲۴ ساعته',
+      category: AssetCategory.iranianCurrency,
+      unit: 'تومان',
+      currency: 'IRR',
+    ),
     AssetDefinition(
       id: 'ir_afn',
       symbol: 'AFN/IRR-FM',
