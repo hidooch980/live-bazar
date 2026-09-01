@@ -4,7 +4,7 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [0.4.1] — 2026-09-01
 
 ### Fixed
 - **همه‌ی قیمت‌ها شب‌ها «قدیمی» می‌شدند.** After the Iranian market closes at
