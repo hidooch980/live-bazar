@@ -10,6 +10,7 @@ import '../providers/adapters/iranian_market_provider.dart';
 import '../providers/provider_registry.dart';
 import '../services/alert_service.dart';
 import '../services/historical_snapshot_service.dart';
+import '../services/market_history_service.dart';
 import '../services/market_refresh_engine.dart';
 import '../services/market_side_effects.dart';
 import '../services/notification_service.dart';
@@ -49,6 +50,11 @@ final historyProvider = Provider<HistoricalSnapshotService>(
 
 final notificationsProvider = Provider<NotificationService>(
   (ref) => NotificationService(),
+);
+
+/// Real daily history (TGJU published tables) for the chart screen.
+final marketHistoryProvider = Provider<MarketHistoryService>(
+  (ref) => MarketHistoryService(store: ref.watch(localStoreProvider)),
 );
 
 final timeZoneProvider = Provider<TimeZoneService>(

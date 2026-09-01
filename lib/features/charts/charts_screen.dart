@@ -5,10 +5,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme.dart';
 import '../../config/asset_catalog.dart';
 import '../../core/utils/fa_number.dart';
-import '../../services/historical_snapshot_service.dart';
+import '../../services/market_history_service.dart';
 import '../../state/app_providers.dart';
 
-/// CHARTS (§27) built ONLY from locally accumulated REAL observations (§19).
+/// A chart range, drawn either from the source's published daily table or
+/// from observations this app accumulated locally (§19).
+class _Range {
+  const _Range(this.label, this.days, {this.intraday = const Duration()});
+
+  final String label;
+
+  /// Trading days to show from the daily table; 0 = everything published.
+  final int days;
+
+  /// Non-zero for intraday ranges served from local observations.
+  final Duration intraday;
+
+  bool get isDaily => intraday == const Duration();
+}
+
+/// CHARTS (§27).
+///
+/// Long ranges use the REAL published daily table from the source; short
+/// ranges use the locally accumulated observations (§19). Neither path
+/// ever fabricates a point, and the footer always says which one is on
+/// screen and how many real records it holds.
 class ChartsScreen extends ConsumerStatefulWidget {
   const ChartsScreen({super.key});
 
@@ -18,20 +39,24 @@ class ChartsScreen extends ConsumerStatefulWidget {
 
 class _ChartsScreenState extends ConsumerState<ChartsScreen> {
   String? _assetId;
-  Duration _range = const Duration(hours: 1);
+  _Range _range = _daily.first;
 
-  static const _ranges = <(Duration, String)>[
-    (Duration(hours: 1), '۱س'),
-    (Duration(hours: 6), '۶س'),
-    (Duration(days: 1), '۱ر'),
-    (Duration(days: 7), '۱ه'),
-    (Duration(days: 30), '۱م'),
+  static const _intraday = <_Range>[
+    _Range('۱ ساعت', 0, intraday: Duration(hours: 1)),
+    _Range('۶ ساعت', 0, intraday: Duration(hours: 6)),
+    _Range('۱ روز', 0, intraday: Duration(days: 1)),
+  ];
+
+  static const _daily = <_Range>[
+    _Range('۱ ماه', 30),
+    _Range('۳ ماه', 90),
+    _Range('۱ سال', 365),
+    _Range('همه', 0),
   ];
 
   @override
   Widget build(BuildContext context) {
     final market = ref.watch(marketControllerProvider);
-    final history = ref.read(historyProvider);
     final quotes = market.snapshot?.quotes ?? const {};
 
     final options = [
@@ -39,10 +64,12 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
         if (quotes.containsKey(d.id)) (d.id, d.nameFa),
     ];
     _assetId ??= options.isNotEmpty ? options.first.$1 : null;
+    final assetId = _assetId;
+    final hasDaily =
+        assetId != null && MarketHistoryService.hasHistory(assetId);
 
-    final series = _assetId == null
-        ? const <PricePoint>[]
-        : history.series(_assetId!, range: _range).toList();
+    // An asset with no published table can only offer intraday ranges.
+    if (!hasDaily && _range.isDaily) _range = _intraday.first;
 
     return Scaffold(
       appBar: AppBar(title: const Text('چارت')),
@@ -51,7 +78,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: DropdownButtonFormField<String>(
-              initialValue: _assetId,
+              initialValue: assetId,
               items: [
                 for (final (id, name) in options)
                   DropdownMenuItem(value: id, child: Text(name)),
@@ -64,48 +91,104 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
             ),
           ),
           SizedBox(
-            height: 44,
+            height: 48,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               children: [
-                for (final (d, label) in _ranges)
+                for (final r in [..._intraday, if (hasDaily) ..._daily])
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: ChoiceChip(
-                      label: Text(label),
-                      selected: _range == d,
-                      onSelected: (_) => setState(() => _range = d),
+                      label: Text(r.label),
+                      selected: _range.label == r.label,
+                      onSelected: (_) => setState(() => _range = r),
                     ),
                   ),
               ],
             ),
           ),
           Expanded(
-            child: series.length < 2
-                ? _empty(context)
-                : Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: LineChart(_chart(series)),
-                  ),
+            child: assetId == null
+                ? _empty(context, daily: false)
+                : _range.isDaily
+                ? _dailyChart(context, assetId)
+                : _intradayChart(context, assetId),
           ),
-          if (series.length >= 2)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                '${series.length.faDigits} نقطه واقعی ثبت‌شده محلی — بدون داده ساختگی',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context).hintColor,
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
-  Widget _empty(BuildContext context) => Center(
+  // ---- daily (published source table) --------------------------------
+  Widget _dailyChart(BuildContext context, String assetId) {
+    return FutureBuilder<List<DailyCandle>>(
+      future: ref.read(marketHistoryProvider).daily(assetId),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.gold),
+          );
+        }
+        final all = snap.data ?? const <DailyCandle>[];
+        final candles = _range.days == 0 || _range.days >= all.length
+            ? all
+            : all.sublist(all.length - _range.days);
+        if (candles.length < 2) return _empty(context, daily: true);
+
+        final closes = [for (final c in candles) c.close];
+        return Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: LineChart(_chart(closes)),
+              ),
+            ),
+            _footer(
+              context,
+              '${candles.length.faDigits} روز معاملاتی واقعی از منبع'
+              ' — ${candles.first.jalali} تا ${candles.last.jalali}',
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ---- intraday (locally accumulated observations) --------------------
+  Widget _intradayChart(BuildContext context, String assetId) {
+    final series = ref
+        .read(historyProvider)
+        .series(assetId, range: _range.intraday)
+        .toList();
+    if (series.length < 2) return _empty(context, daily: false);
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: LineChart(_chart([for (final p in series) p.p])),
+          ),
+        ),
+        _footer(
+          context,
+          '${series.length.faDigits} نقطه واقعی ثبت‌شده محلی — بدون داده ساختگی',
+        ),
+      ],
+    );
+  }
+
+  Widget _footer(BuildContext context, String text) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
+    ),
+  );
+
+  Widget _empty(BuildContext context, {required bool daily}) => Center(
     child: Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -119,7 +202,9 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'با بازه نگه‌داشتن اپلیکیشن، داده‌های واقعی به‌صورت محلی انباشته می‌شوند. هیچ تاریخچه ساختگی نمایش داده نمی‌شود.',
+            daily
+                ? 'تاریخچه روزانه این دارایی از منبع در دسترس نیست. هیچ تاریخچه ساختگی نمایش داده نمی‌شود.'
+                : 'با باز نگه‌داشتن اپلیکیشن، داده‌های واقعی به‌صورت محلی انباشته می‌شوند. هیچ تاریخچه ساختگی نمایش داده نمی‌شود.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: Theme.of(context).hintColor),
           ),
@@ -128,17 +213,20 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
     ),
   );
 
-  LineChartData _chart(List<PricePoint> series) {
+  LineChartData _chart(List<double> values) {
     final spots = [
-      for (var i = 0; i < series.length; i++) FlSpot(i.toDouble(), series[i].p),
+      for (var i = 0; i < values.length; i++) FlSpot(i.toDouble(), values[i]),
     ];
-    final first = series.first.p;
-    final last = series.last.p;
-    final lineColor = last >= first ? AppTheme.green : AppTheme.red;
+    final lineColor = values.last >= values.first
+        ? AppTheme.green
+        : AppTheme.red;
+    final lo = values.reduce((a, b) => a < b ? a : b);
+    final hi = values.reduce((a, b) => a > b ? a : b);
+    final pad = (hi - lo).abs() * 0.05;
 
     return LineChartData(
-      minY: spots.map((s) => s.y).reduce((a, b) => a < b ? a : b) * 0.999,
-      maxY: spots.map((s) => s.y).reduce((a, b) => a > b ? a : b) * 1.001,
+      minY: lo - (pad == 0 ? lo.abs() * 0.001 : pad),
+      maxY: hi + (pad == 0 ? hi.abs() * 0.001 : pad),
       gridData: const FlGridData(show: true),
       titlesData: const FlTitlesData(show: false),
       borderData: FlBorderData(show: false),
@@ -156,7 +244,7 @@ class _ChartsScreenState extends ConsumerState<ChartsScreen> {
           getTooltipItems: (spots) => [
             for (final s in spots)
               LineTooltipItem(
-                s.y.toStringAsFixed(4).faString,
+                s.y >= 1000 ? s.y.faPrice() : s.y.toStringAsFixed(2).faString,
                 TextStyle(color: lineColor, fontWeight: FontWeight.w800),
               ),
           ],
