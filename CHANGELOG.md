@@ -4,6 +4,30 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [0.3.1] — 2026-09-01
+
+### Fixed
+- **Releases are now signed with a stable release key.** Every APK so far was
+  debug-signed with a keystore the CI runner generated fresh on each run, so
+  no two releases shared a certificate and in-app updates always failed with
+  `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Verified across v0.1.3 vs v0.2.0:
+  cert SHA-256 `e63ff593…` vs `f1574e5c…`.
+- The workflow's keystore step could never have worked: it derived the AES key
+  from `KEYSTORE_SECRET` while also treating that same value as the base64 of
+  its own ciphertext — a circular definition with no constructible input.
+  Replaced with the standard scheme: `KEYSTORE_BASE64` + `KEYSTORE_PASSWORD`
+  repository secrets, nothing key-related in the repo.
+- The release job now refuses to publish when the signing secret is missing,
+  instead of silently shipping a debug-signed APK, and runs `apksigner verify
+  --print-certs` so the published certificate is visible in the build log.
+- `.gitignore` now covers `android/key.properties`, `android/keystore/` and
+  every `*.p12`/`*.jks`/`*.keystore`.
+
+### Upgrade note
+- **یک بار** باید نسخه‌ی قدیمی را حذف و این نسخه را دستی نصب کنی: امضای برنامه
+  عوض شده و اندروید اجازه‌ی نصب روی نسخه‌ی قبلی را نمی‌دهد. از این نسخه به بعد
+  آپدیت داخل اپ بدون حذف کار می‌کند.
+
 ## [0.3.0] — 2026-09-01
 
 ### Added

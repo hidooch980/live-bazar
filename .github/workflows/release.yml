@@ -29,40 +29,44 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
-      - name: Restore release keystore (free self-signed cert)
+      - name: Require release signing
         env:
-          KEYSTORE_SECRET: ${{ secrets.KEYSTORE_SECRET }}
-        if: env.KEYSTORE_SECRET != ''
-        shell: python
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          import base64, os
-          secret = os.environ['KEYSTORE_SECRET']
-          data = base64.b64decode(secret)
-          iv, body = data[:16], data[16:]
-          from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-          from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-          from cryptography.hazmat.primitives import hashes, padding
-          kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=b'MolidoMarket2026', iterations=100000)
-          key = kdf.derive(secret.encode())
-          dec = Cipher(algorithms.AES(key), modes.CBC(iv)).decryptor()
-          padded = dec.update(body) + dec.finalize()
-          unpadder = padding.PKCS7(128).unpadder()
-          jks = unpadder.update(padded) + unpadder.finalize()
-          os.makedirs('android/keystore', exist_ok=True)
-          open('android/keystore/molido-release.p12', 'wb').write(jks)
-          with open('android/key.properties', 'w') as f:
-              f.write('storeFile=../keystore/molido-release.p12\n')
-              f.write('storePassword=' + secret + '\n')
-              f.write('keyAlias=molido\n')
-              f.write('keyPassword=' + secret + '\n')
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 is not set. Refusing to publish a"
+            echo "::error::debug-signed APK: every run would use a different"
+            echo "::error::throwaway key and users could not update in place."
+            exit 1
+          fi
+
+      - name: Restore release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          mkdir -p android/keystore
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/keystore/molido-release.p12
+          {
+            echo "storeFile=../keystore/molido-release.p12"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=molido"
+            echo "keyPassword=$KEYSTORE_PASSWORD"
+          } > android/key.properties
 
       - name: Analyze & Test (gate)
         run: |
           flutter analyze --fatal-infos
           flutter test
 
-      - name: Build APK (release, debug-signed)
+      - name: Build APK (release, signed with the release key)
         run: flutter build apk --release
+
+      - name: Verify APK signature
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          "$APKSIGNER" verify --print-certs --verbose "$APK"
 
       - name: Rename artifact
         run: mv build/app/outputs/flutter-apk/app-release.apk molido-market-${{ github.ref_name }}.apk

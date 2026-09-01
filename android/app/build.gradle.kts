@@ -7,8 +7,10 @@ plugins {
 }
 
 // Release signing (free self-signed certificate).
-// Local builds: android/key.properties (gitignored). CI: decrypted by the
-// release workflow from the ENCRYPTED keystore + KEYSTORE_SECRET.
+// Local builds: android/key.properties (gitignored). CI: the release
+// workflow writes it from the KEYSTORE_BASE64 + KEYSTORE_PASSWORD secrets.
+// Without it the build falls back to debug signing, which CI now refuses
+// to publish.
 val keystoreProperties = Properties().apply {
     val f = rootProject.file("key.properties")
     if (f.exists()) f.inputStream().use { load(it) }
