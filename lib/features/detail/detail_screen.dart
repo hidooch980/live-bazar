@@ -67,7 +67,7 @@ class DetailScreen extends ConsumerWidget {
                 _PriceHeader(
                   quote: quote,
                   useToman: ref.watch(tomanModeProvider),
-                  irr: irrQuoteOf(market.snapshot),
+                  rate: tomanRateOf(market.snapshot),
                 ),
                 const SizedBox(height: 8),
                 _ScoreCard(quote: quote),
@@ -85,12 +85,12 @@ class _PriceHeader extends StatelessWidget {
   const _PriceHeader({
     required this.quote,
     required this.useToman,
-    required this.irr,
+    required this.rate,
   });
 
   final PriceQuote quote;
   final bool useToman;
-  final PriceQuote? irr;
+  final TomanRate? rate;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +102,7 @@ class _PriceHeader extends StatelessWidget {
 
     String primary;
     String? secondary;
-    final t = useToman ? PriceDisplay.toman(quote, irr) : null;
+    final t = useToman ? PriceDisplay.toman(quote, rate) : null;
     if (t != null) {
       primary = '${PriceDisplay.tomanText(t)} ${PriceDisplay.tomanUnit}';
       secondary = '${quote.price.faPrice()} ${quote.currency}';

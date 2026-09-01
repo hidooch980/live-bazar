@@ -4,6 +4,24 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **تتر (تومان) — ۲۴ ساعته.** Every Iranian-market row freezes when the
+  bazaar closes at 20:00; the Tether/Toman rate does not. It is now a live
+  asset in بازار آزاد, so there is a real, moving Toman price on screen at
+  night. Measured against the closed market the same evening: تتر ۲۱۴,۸۰۵
+  vs a frozen dollar at ۲۱۴,۰۰۰ — 0.38% apart.
+
+### Fixed
+- **Prices shown in Toman were about a third too low.** The USD→Toman
+  conversion used `fx_irr`, the OFFICIAL published rate, which was quoting
+  ۱۴۶,۸۸۲ تومان while the free market was at ۲۱۴,۰۰۰ — so every
+  USD-denominated asset (both gold ounces, all crypto, the whole portfolio
+  total) was understated by ~32%. The rate now comes from the free-market
+  dollar while the bazaar trades, from the 24/7 Tether rate once it closes,
+  and from the official rate only if neither is on the snapshot.
+
 ## [0.4.1] — 2026-09-01
 
 ### Fixed

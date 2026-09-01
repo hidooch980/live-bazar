@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/cache/local_state_store.dart';
 import '../data/cache/market_cache.dart';
+import '../core/utils/price_display.dart';
 import '../domain/entities/alert_rule.dart';
 import '../domain/entities/price_quote.dart';
 import '../providers/adapters/crypto_provider.dart';
@@ -93,10 +94,17 @@ final tomanModeProvider = NotifierProvider<TomanModeController, bool>(
   TomanModeController.new,
 );
 
-/// Returns the live fx_irr quote (IRR per USD) for Toman conversion.
-PriceQuote? irrQuoteOf(MarketSnapshotLike? snapshot) {
-  final q = snapshot?.quotes['fx_irr'];
-  return q != null && q.status.isDisplayable ? q : null;
+/// The Toman-per-USD rate to display with, from the best REAL source on
+/// the snapshot: the free-market dollar while the bazaar trades, the 24/7
+/// Tether rate once it closes, the official rate only if neither is there.
+TomanRate? tomanRateOf(MarketSnapshotLike? snapshot) {
+  final quotes = snapshot?.quotes;
+  if (quotes == null) return null;
+  return PriceDisplay.rateFrom(
+    freeMarket: quotes['ir_usd'],
+    tether: quotes['usdt_irt'],
+    official: quotes['fx_irr'],
+  );
 }
 
 final marketSideEffectsProvider = Provider<MarketSideEffects>(
