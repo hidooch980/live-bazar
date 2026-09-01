@@ -25,6 +25,14 @@ versioning follows [SemVer](https://semver.org/).
   observations. The footer always says which of the two is on screen and
   how many real records it holds; crypto and global FX have no published
   table and keep the local-only path.
+- **هشدار قیمت در پس‌زمینه.** Alert rules were only ever evaluated on an
+  engine snapshot, and the engine stops when the app is paused (§6) — so a
+  price alert only fired while you were already looking at the app. An
+  opt-in WorkManager task (Settings › هشدارها) now runs one
+  fetch-evaluate-notify pass every 15 minutes, Android's floor for
+  periodic work. Off by default, it only fetches the assets an active rule
+  actually names, and does no network work at all when there are no rules.
+
 
 ### Notes on units — each verified against the live feed
 - The yen is published **per 100 units**; its name says so, otherwise the
