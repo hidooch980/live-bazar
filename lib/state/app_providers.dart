@@ -59,11 +59,17 @@ final timeZoneProvider = Provider<TimeZoneService>(
 class TomanModeController extends Notifier<bool> {
   static const _key = 'display_toman';
 
+  /// Guards against a load that started before a rebuild or a user choice
+  /// landing late and reverting it (same race as HomeLayoutController).
+  int _generation = 0;
+
   @override
   bool build() {
     // Load persisted preference once; default true per user expectation.
     final store = ref.watch(localStoreProvider);
+    final generation = ++_generation;
     store.getString(_key).then((v) {
+      if (generation != _generation) return;
       final persisted = v == null ? true : v == '1';
       if (persisted != state) state = persisted;
     });
@@ -71,6 +77,7 @@ class TomanModeController extends Notifier<bool> {
   }
 
   Future<void> set(bool value) async {
+    _generation++;
     state = value;
     await ref.read(localStoreProvider).setString(_key, value ? '1' : '0');
   }
