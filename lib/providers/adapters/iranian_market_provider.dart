@@ -201,11 +201,28 @@ class IranianMarketProvider implements IPriceProvider {
           currency: def.currency,
           timestamp: tehranToUtc(row['ts']) ?? fallbackTimestamp,
           source: sourceName,
-          status: QuoteStatus.live,
+          status: isPreviousClose(row)
+              ? QuoteStatus.previousClose
+              : QuoteStatus.live,
         ),
       );
     }
     return quotes;
+  }
+
+  /// True when the row carries a previous session's close rather than a
+  /// live print.
+  ///
+  /// While a market trades, `t` is a clock ('09:29:32'). Once it stops —
+  /// overnight, or before the day's first trade — TGJU replaces `t` with
+  /// the last trading DATE ('۱۰ شهریور') and stamps `ts` at midnight. An
+  /// age computed from that midnight is fiction, so the quote has to say
+  /// what it is instead.
+  @visibleForTesting
+  static bool isPreviousClose(Map<dynamic, dynamic> row) {
+    final t = row['t_en'] ?? row['t'];
+    if (t is String && t.contains(':')) return false;
+    return '${row['ts']}'.endsWith('00:00:00');
   }
 
   /// Feed timestamp ('2026-09-01 13:56:26', Tehran wall-clock) -> UTC.

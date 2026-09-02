@@ -220,10 +220,15 @@ class MarketRefreshEngine {
     final state = anomalySvc.assess(candidate: q, previousValid: previous);
     switch (state) {
       case AnomalyState.valid:
-        // This quote WAS just fetched successfully, so it is the newest the
-        // source offers. If the source's own publish time is old, the market
-        // is closed or the asset is thinly traded — that is DELAYED, not
-        // STALE. STALE is reserved for data we failed to refresh (§13).
+        // The provider may already know this is a previous session's close
+        // — its timestamp is a midnight date stamp, so any age derived
+        // from it is fiction. Keep that verdict.
+        if (incoming.status == QuoteStatus.previousClose) return q;
+        // Otherwise: this quote WAS just fetched successfully, so it is the
+        // newest the source offers. If the source's own publish time is
+        // old, the market is closed or the asset is thinly traded — that is
+        // DELAYED, not STALE. STALE is reserved for data we failed to
+        // refresh (§13).
         return q.copyWith(
           status: _validation.isStale(q)
               ? QuoteStatus.delayed

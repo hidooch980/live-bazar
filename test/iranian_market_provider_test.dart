@@ -180,6 +180,69 @@ void main() {
     }
   });
 
+  test('a date-stamped row is a previous close, not a live print', () {
+    // Real shape at 09:29 Tehran, before the bazaar's first trade: `t`
+    // carries the last trading DATE instead of a clock, and `ts` is that
+    // date at midnight. An age from that midnight would read "۳۳ ساعت
+    // پیش" for what is really last night's close.
+    expect(
+      IranianMarketProvider.isPreviousClose({
+        'p': '2,140,000',
+        'd': '0',
+        'dp': 0,
+        'dt': '',
+        't': '۱۰ شهریور',
+        't_en': ' 1 Sep',
+        'ts': '2026-09-01 00:00:00',
+      }),
+      isTrue,
+    );
+    // While it trades, `t` is a clock and the row is a genuine print.
+    expect(
+      IranianMarketProvider.isPreviousClose({
+        'p': '2,146,970',
+        't': '۰۹:۲۹:۳۲',
+        't_en': '09:29:32',
+        'ts': '2026-09-02 09:29:32',
+      }),
+      isFalse,
+    );
+    // A real print that happens to land exactly on midnight still has a
+    // clock in `t`, so it is not mistaken for a close.
+    expect(
+      IranianMarketProvider.isPreviousClose({
+        't_en': '00:00:00',
+        'ts': '2026-09-02 00:00:00',
+      }),
+      isFalse,
+    );
+  });
+
+  test('previous-close rows reach the UI labelled as such', () {
+    final quotes = provider.parseFeed(
+      {
+        'current': {
+          'price_dollar_rl': {
+            'p': '2,140,000',
+            'd': '0',
+            'dp': 0,
+            'dt': '',
+            't': '۱۰ شهریور',
+            't_en': ' 1 Sep',
+            'ts': '2026-09-01 00:00:00',
+          },
+        },
+      },
+      {'ir_usd'},
+      fallbackTimestamp: fallback,
+    );
+
+    final usd = quotes.single;
+    expect(usd.status, QuoteStatus.previousClose);
+    expect(usd.price, 214000); // yesterday's close, honestly shown
+    expect(usd.status.isDisplayable, isTrue);
+  });
+
   test('number parsing rejects junk', () {
     expect(parseMarketNumber('1,234.5'), 1234.5);
     expect(parseMarketNumber('۰'), isNull);
