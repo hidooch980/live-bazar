@@ -4,6 +4,19 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **ماشین‌حساب هنوز دلار→یورو را نمی‌توانست.** The 0.5.3 attempt keyed off
+  `PriceQuote.currency`, but that field names the ASSET, not the unit its
+  price is quoted in: `fx_eur` carries 'EUR' while its price is USD per
+  euro, and `fx_irr` carries 'IRR' while its price is Rial per USD. So the
+  same-unit shortcut never fired for an FX pair and the conversion refused.
+  A single `PriceDisplay.unitOf` now decides the denomination, and both the
+  tile and the converter go through it.
+- `fx_irr` is no longer treatable as a 146,882 تومان asset — it is a rate,
+  not a price, and now converts to nothing.
+
 ## [0.5.3] — 2026-09-02
 
 ### Fixed

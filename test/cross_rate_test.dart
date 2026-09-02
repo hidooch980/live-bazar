@@ -6,12 +6,17 @@ import 'package:live_bazar/domain/entities/price_quote.dart';
 /// the same unit — fx_* and crypto are quoted in USD, everything from the
 /// Iranian market in Toman — so both must be normalized before dividing.
 /// Raw division answered "1 USD = 0.0000 free-market dollars".
-PriceQuote _q(String id, double price, String currency) => PriceQuote(
+PriceQuote _q(
+  String id,
+  double price,
+  String currency, {
+  AssetCategory category = AssetCategory.currency,
+}) => PriceQuote(
   id: id,
   symbol: id,
   name: id,
   nameFa: id,
-  category: AssetCategory.currency,
+  category: category,
   price: price,
   unit: currency == 'IRR' ? 'تومان' : '',
   currency: currency,
@@ -21,14 +26,17 @@ PriceQuote _q(String id, double price, String currency) => PriceQuote(
 );
 
 // Values observed on the device, 2026-09-02.
-final _freeDollar = _q('ir_usd', 214000, 'IRR');
-final _coin = _q('coin_emami', 221505000, 'IRR');
+final _freeDollar = _q(
+  'ir_usd',
+  214000,
+  'IRR',
+  category: AssetCategory.iranianCurrency,
+);
+final _coin = _q('coin_emami', 221505000, 'IRR', category: AssetCategory.coin);
 final _usd = _q('fx_usd', 1, 'USD');
 final _eur = _q('fx_eur', 1.1609, 'USD');
 final _rate = PriceDisplay.rateFrom(freeMarket: _freeDollar)!;
 
-/// Mirrors the converter: same denomination divides directly, a mixed
-/// pair normalizes through Toman first.
 double? _convert(
   PriceQuote from,
   PriceQuote to,
@@ -36,14 +44,9 @@ double? _convert(
   TomanRate? rate,
   bool useRate = true,
 }) {
-  if (from.currency == to.currency) {
-    return to.price > 0 ? amount * (from.price / to.price) : null;
-  }
   final r = useRate ? (rate ?? _rate) : null;
-  final f = PriceDisplay.toman(from, r);
-  final t = PriceDisplay.toman(to, r);
-  if (f == null || t == null || t <= 0) return null;
-  return amount * (f / t);
+  final ratio = PriceDisplay.crossRate(from, to, r);
+  return ratio == null ? null : amount * ratio;
 }
 
 void main() {
@@ -94,10 +97,35 @@ void main() {
     );
   });
 
+  test('the currency field names the asset, not the price unit', () {
+    // fx_eur is called 'EUR' but its price is USD per euro; fx_irr is
+    // called 'IRR' but its price is Rial per USD, not Toman. Reading the
+    // field as the denomination is what broke دلار→یورو.
+    expect(PriceDisplay.unitOf(_eur), QuoteUnit.usd);
+    expect(PriceDisplay.unitOf(_usd), QuoteUnit.usd);
+    expect(PriceDisplay.unitOf(_freeDollar), QuoteUnit.toman);
+    final official = _q('fx_irr', 1468820, 'IRR');
+    expect(PriceDisplay.unitOf(official), QuoteUnit.none);
+    // ...so it is never mistaken for a 146,882 تومان asset.
+    expect(PriceDisplay.toman(official, _rate), isNull);
+  });
+
+  test('دلار to یورو works with no Iranian rate on the snapshot', () {
+    // The regression users hit: both are quoted in USD, so the unit
+    // cancels and no rate is needed.
+    expect(_convert(_usd, _eur, 1, useRate: false)!, closeTo(0.8614, 0.0001));
+    expect(_convert(_eur, _usd, 1, useRate: false)!, closeTo(1.1609, 0.0001));
+  });
+
   test('an unconvertible side yields nothing rather than a wrong number', () {
     // No rate on the snapshot: a USD side cannot be expressed in Toman.
     expect(PriceDisplay.toman(_usd, null), isNull);
-    final index = _q('bourse_index', 6583932, 'IDX');
+    final index = _q(
+      'bourse_index',
+      6583932,
+      'IDX',
+      category: AssetCategory.marketIndex,
+    );
     expect(_convert(index, _freeDollar, 1), isNull);
   });
 }

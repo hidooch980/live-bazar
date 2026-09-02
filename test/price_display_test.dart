@@ -8,12 +8,13 @@ PriceQuote _q(
   required String currency,
   QuoteStatus status = QuoteStatus.live,
   DateTime? ts,
+  AssetCategory category = AssetCategory.currency,
 }) => PriceQuote(
   id: id,
   symbol: id,
   name: id,
   nameFa: id,
-  category: AssetCategory.currency,
+  category: category,
   price: price,
   unit: currency == 'IRR' ? 'تومان' : '',
   currency: currency,
@@ -29,12 +30,14 @@ PriceQuote _freeMarket({DateTime? ts, QuoteStatus? status}) => _q(
   currency: 'IRR',
   ts: ts ?? DateTime.utc(2026, 9, 1, 16, 29, 59), // 19:59:59 Tehran
   status: status ?? QuoteStatus.delayed,
+  category: AssetCategory.iranianCurrency,
 );
 PriceQuote _tether({DateTime? ts}) => _q(
   'usdt_irt',
   price: 214792,
   currency: 'IRR',
   ts: ts ?? DateTime.utc(2026, 9, 1, 19, 29), // 22:59 Tehran
+  category: AssetCategory.iranianCurrency,
 );
 PriceQuote _official() =>
     _q('fx_irr', price: 1468820, currency: 'IRR'); // 146,882 Toman
@@ -80,7 +83,12 @@ void main() {
 
       expect(
         PriceDisplay.rateFrom(
-          freeMarket: _q('ir_usd', price: 0, currency: 'IRR'),
+          freeMarket: _q(
+            'ir_usd',
+            price: 0,
+            currency: 'IRR',
+            category: AssetCategory.iranianCurrency,
+          ),
         ),
         isNull,
       );
@@ -95,7 +103,12 @@ void main() {
         tether: _tether(),
         official: _official(),
       );
-      final ounce = _q('xau_usd', price: 4400, currency: 'USD');
+      final ounce = _q(
+        'xau_usd',
+        price: 4400,
+        currency: 'USD',
+        category: AssetCategory.gold,
+      );
 
       final shown = PriceDisplay.toman(ounce, rate)!;
       expect(shown, 4400 * 214792);
@@ -113,10 +126,20 @@ void main() {
     });
 
     test('no rate means no number, never a guess', () {
-      final usd = _q('xau_usd', price: 100, currency: 'USD');
+      final usd = _q(
+        'xau_usd',
+        price: 100,
+        currency: 'USD',
+        category: AssetCategory.gold,
+      );
       expect(PriceDisplay.toman(usd, null), isNull);
       // A non-USD, non-IRR quote (the bourse index) is never converted.
-      final index = _q('bourse_index', price: 6583932, currency: 'IDX');
+      final index = _q(
+        'bourse_index',
+        price: 6583932,
+        currency: 'IDX',
+        category: AssetCategory.marketIndex,
+      );
       expect(
         PriceDisplay.toman(index, PriceDisplay.rateFrom(tether: _tether())),
         isNull,
