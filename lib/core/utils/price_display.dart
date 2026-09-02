@@ -1,6 +1,9 @@
 import '../../domain/entities/price_quote.dart';
 import 'fa_number.dart';
 
+/// The unit a quote's price is expressed in — not the asset's own name.
+enum QuoteUnit { toman, usd, none }
+
 /// Which real quote the Toman conversion rate came from, so the UI can say
 /// so instead of presenting a number with no provenance.
 enum TomanRateSource {
@@ -84,12 +87,53 @@ abstract final class PriceDisplay {
   static bool _usable(PriceQuote? q) =>
       q != null && q.price > 0 && q.status.isDisplayable;
 
-  /// Returns the price in TOMAN, or null when no real rate is available.
+  /// What a quote's [PriceQuote.price] is actually expressed in.
+  ///
+  /// [PriceQuote.currency] names the ASSET, not the unit of its price:
+  /// `fx_eur` carries 'EUR' while its price is USD per euro, and `fx_irr`
+  /// carries 'IRR' while its price is Rial per USD. Reading that field as
+  /// the denomination is what made the converter refuse دلار→یورو and
+  /// what would have read fx_irr's Rial figure as Toman.
+  static QuoteUnit unitOf(PriceQuote quote) {
+    // A rate, not a price of anything: only ever used to build a
+    // TomanRate, never displayed or converted as a value.
+    if (quote.id == 'fx_irr') return QuoteUnit.none;
+    // Global currencies are quoted USD-per-unit whatever they are called.
+    if (quote.category == AssetCategory.currency) return QuoteUnit.usd;
+    if (quote.currency == 'IRR') return QuoteUnit.toman;
+    if (quote.currency == 'USD') return QuoteUnit.usd;
+    return QuoteUnit.none; // index points and anything else
+  }
+
+  /// Returns the price in TOMAN, or null when it cannot be expressed.
   static double? toman(PriceQuote quote, TomanRate? rate) {
-    if (quote.currency == 'IRR') return quote.price; // already Toman
-    if (rate == null || rate.tomanPerUsd <= 0) return null;
-    if (quote.currency != 'USD') return null;
-    return quote.price * rate.tomanPerUsd;
+    switch (unitOf(quote)) {
+      case QuoteUnit.toman:
+        return quote.price;
+      case QuoteUnit.usd:
+        if (rate == null || rate.tomanPerUsd <= 0) return null;
+        return quote.price * rate.tomanPerUsd;
+      case QuoteUnit.none:
+        return null;
+    }
+  }
+
+  /// How many units of [to] one unit of [from] buys.
+  ///
+  /// Same-unit pairs divide directly: the denomination cancels and no
+  /// Toman rate is needed, which is what keeps دلار→یورو working before
+  /// any Iranian quote has arrived. Only a mixed pair needs the rate.
+  static double? crossRate(PriceQuote from, PriceQuote to, TomanRate? rate) {
+    final fromUnit = unitOf(from);
+    final toUnit = unitOf(to);
+    if (fromUnit == QuoteUnit.none || toUnit == QuoteUnit.none) return null;
+    if (fromUnit == toUnit) {
+      return to.price > 0 ? from.price / to.price : null;
+    }
+    final f = toman(from, rate);
+    final t = toman(to, rate);
+    if (f == null || t == null || t <= 0) return null;
+    return f / t;
   }
 
   /// Persian-formatted Toman text with grouping.
