@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/asset_catalog.dart';
 import '../../core/utils/fa_number.dart';
 import '../../core/utils/price_display.dart';
+import '../../domain/entities/price_quote.dart';
 import '../../state/app_providers.dart';
 
 /// CALCULATOR (§25): converts between enabled assets using the latest
@@ -13,6 +14,24 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+/// How many units of [to] one unit of [from] buys.
+///
+/// The two sides are not necessarily in the same denomination: fx_* and
+/// crypto are quoted in USD, everything from the Iranian market in Toman.
+/// Same-denomination pairs divide directly — the unit cancels and no
+/// Toman rate is needed, which is what keeps دلار→یورو working before the
+/// Iranian feed has arrived. Only a mixed pair needs the rate, and
+/// without one it yields nothing rather than a wrong number.
+double? _crossRate(PriceQuote from, PriceQuote to, TomanRate? rate) {
+  if (from.currency == to.currency) {
+    return to.price > 0 ? from.price / to.price : null;
+  }
+  final f = PriceDisplay.toman(from, rate);
+  final t = PriceDisplay.toman(to, rate);
+  if (f == null || t == null || t <= 0) return null;
+  return f / t;
 }
 
 /// Enough decimals to stay meaningful across nine orders of magnitude:
@@ -54,12 +73,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         // Dividing the raw prices asked what 1.0 USD is in units of
         // 214,000 Toman and answered 0.0000. Normalize both to Toman
         // first — the same real rate the rest of the app displays with.
-        final rate = tomanRateOf(snap);
-        final fromToman = PriceDisplay.toman(f, rate);
-        final toToman = PriceDisplay.toman(t, rate);
-        if (fromToman != null && toToman != null && toToman > 0) {
-          result = amount * (fromToman / toToman);
-        }
+        final ratio = _crossRate(f, t, tomanRateOf(snap));
+        if (ratio != null) result = amount * ratio;
       }
     }
 

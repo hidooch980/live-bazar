@@ -4,6 +4,16 @@ All notable changes to MOLIDO MARKET are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- **Regression from 0.5.2: دلار→یورو stopped working.** Normalizing both
+  sides of a conversion through Toman fixed the mixed-unit case but made
+  every conversion depend on an Iranian rate, so a USD→USD pair returned
+  «داده معتبر موجود نیست» whenever that rate was not on the snapshot yet.
+  A same-denomination pair now divides directly — the unit cancels and no
+  rate is needed — and only a mixed pair goes through Toman.
+
 ## [0.5.2] — 2026-09-02
 
 ### Fixed

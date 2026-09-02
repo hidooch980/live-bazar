@@ -27,9 +27,21 @@ final _usd = _q('fx_usd', 1, 'USD');
 final _eur = _q('fx_eur', 1.1609, 'USD');
 final _rate = PriceDisplay.rateFrom(freeMarket: _freeDollar)!;
 
-double? _convert(PriceQuote from, PriceQuote to, double amount) {
-  final f = PriceDisplay.toman(from, _rate);
-  final t = PriceDisplay.toman(to, _rate);
+/// Mirrors the converter: same denomination divides directly, a mixed
+/// pair normalizes through Toman first.
+double? _convert(
+  PriceQuote from,
+  PriceQuote to,
+  double amount, {
+  TomanRate? rate,
+  bool useRate = true,
+}) {
+  if (from.currency == to.currency) {
+    return to.price > 0 ? amount * (from.price / to.price) : null;
+  }
+  final r = useRate ? (rate ?? _rate) : null;
+  final f = PriceDisplay.toman(from, r);
+  final t = PriceDisplay.toman(to, r);
   if (f == null || t == null || t <= 0) return null;
   return amount * (f / t);
 }
@@ -70,6 +82,16 @@ void main() {
     final f = PriceDisplay.toman(_coin, null)!;
     final t = PriceDisplay.toman(_freeDollar, null)!;
     expect(f / t, closeTo(1035.07, 0.01));
+  });
+
+  test('a same-currency pair needs no Toman rate at all', () {
+    // Regression: routing USD->USD through the Toman rate made دلار→یورو
+    // fail outright whenever the Iranian feed had not arrived yet.
+    expect(_convert(_usd, _eur, 1, useRate: false)!, closeTo(1 / 1.1609, 1e-9));
+    expect(
+      _convert(_coin, _freeDollar, 1, useRate: false)!,
+      closeTo(1035.07, 0.01),
+    );
   });
 
   test('an unconvertible side yields nothing rather than a wrong number', () {
