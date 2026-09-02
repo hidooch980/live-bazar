@@ -33,10 +33,30 @@ class QuoteTile extends ConsumerWidget {
     );
   }
 
+  /// The free-market dollar stops printing when the bazaar closes, and no
+  /// source has a newer one — nothing trades. The Tether/Toman rate does
+  /// trade around the clock and tracks it closely, so while the dollar row
+  /// is showing a close, it carries the live 24/7 figure beside it. That
+  /// is as close to "always open" as the market actually gets, without
+  /// passing yesterday's close off as the current price.
+  static const _liveProxyFor = {'ir_usd': 'usdt_irt'};
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final useToman = ref.watch(tomanModeProvider);
-    final rate = tomanRateOf(ref.watch(marketControllerProvider).snapshot);
+    final snapshot = ref.watch(marketControllerProvider).snapshot;
+    final rate = tomanRateOf(snapshot);
+
+    String? liveProxy;
+    if (quote.status == QuoteStatus.previousClose ||
+        quote.status == QuoteStatus.delayed) {
+      final proxy = snapshot?.quotes[_liveProxyFor[quote.id]];
+      if (proxy != null && proxy.status == QuoteStatus.live) {
+        liveProxy =
+            'الان تتر: ${PriceDisplay.tomanText(proxy.price)}'
+            ' ${PriceDisplay.tomanUnit}';
+      }
+    }
 
     String primary;
     String? secondary;
@@ -113,6 +133,15 @@ class QuoteTile extends ConsumerWidget {
                   color: Theme.of(context).hintColor,
                 ),
               ),
+            if (liveProxy != null)
+              Text(
+                liveProxy,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppTheme.green,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             if (quote.changePercent != 0)
               Text(
                 '${up ? '+' : ''}${quote.changePercent.toStringAsFixed(2)}٪'
@@ -144,6 +173,9 @@ class StatusBadge extends StatelessWidget {
     final (label, color) = switch (status) {
       QuoteStatus.live => ('زنده', AppTheme.green),
       QuoteStatus.unchanged => ('بدون تغییر', Colors.grey),
+      // Yesterday's close, not decaying data: this market has not traded
+      // yet today, so there is no age to report.
+      QuoteStatus.previousClose => ('پایانی بازار', AppTheme.gold),
       // Not a failure: the market is simply not trading right now.
       QuoteStatus.delayed => (
         age == null ? 'خارج از ساعت بازار' : faAgeLabel(age),

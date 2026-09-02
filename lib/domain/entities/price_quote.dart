@@ -9,6 +9,13 @@ enum QuoteStatus {
   /// thinly traded coin. Nothing is wrong with the app or the fetch, so
   /// this must not be dressed up as a failure.
   delayed,
+
+  /// The source is publishing a previous session's CLOSING price because
+  /// this market has not traded yet today. Its timestamp is a date stamped
+  /// at midnight, not a publish time, so an age computed from it would be
+  /// meaningless — «۳۳ ساعت پیش» for a price that is really last night's
+  /// close.
+  previousClose,
   stale,
   cached,
   fallback,
