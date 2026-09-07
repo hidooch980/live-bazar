@@ -15,9 +15,9 @@ Production-grade **Android** market app built with **Flutter** — no backend, n
 
 | Source | Coverage | Key | Status |
 |---|---|---|---|
-| [TGJU](https://www.tgju.org) | بازار ایران: ۱۳ ارز آزاد، طلا ۱۸ و ۲۴، مثقال، آبشده، انس طلا و نقره، ۶ سکه + حباب نیم و ربع، شاخص کل بورس، نفت برنت و WTI | none | ✅ live (~15s) |
+| [TGJU](https://www.tgju.org) | بازار ایران: ۴۰ ارز آزاد، طلا ۱۸ و ۲۴، مثقال، آبشده، انس طلا و نقره، ۶ سکه + حباب نیم و ربع، شاخص کل بورس، نفت برنت و WTI | none | ✅ live (~5s) |
 | [CoinGecko](https://api.coingecko.com) | BTC, ETH, USDT | none | ✅ enabled |
-| [ExchangeRate-API](https://open.er-api.com) | USD/EUR/GBP/AED/TRY/CNY/CAD/AUD/CHF/JPY | none | ✅ primary FX |
+| [ExchangeRate-API](https://open.er-api.com) | ۳۷ ارز جهانی (USD/EUR/GBP/AED/TRY/PKR/INR/QAR/KWD/SAR/…) | none | ✅ primary FX |
 | [Frankfurter (ECB)](https://frankfurter.dev) | ECB currencies subset | none | ✅ fallback FX |
 
 Every quote carries its provider's REAL publish timestamp. A quote older than

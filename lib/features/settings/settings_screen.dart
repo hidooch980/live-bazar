@@ -73,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
           const _Header('سیکل به‌روزرسانی'),
           const ListTile(
             leading: Icon(Icons.timer_outlined),
-            title: Text('بررسی بازار هر ۵ ثانیه (فقط پیش‌زمینه فعال)'),
+            title: Text('بررسی بازار هر ۲ ثانیه (فقط پیش‌زمینه فعال)'),
             subtitle: Text(
               'هر منبع با فاصله مجاز خودش فراخوانی می‌شود؛ هیچ درخواست تکراری یا موازی ارسال نمی‌شود.',
             ),

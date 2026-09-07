@@ -5,19 +5,19 @@ abstract final class AppConstants {
   static const String taglineFa = 'بازار را لحظه‌به‌لحظه دنبال کن';
 
   /// Central market check cadence while the app is in the foreground.
-  static const Duration marketCheckInterval = Duration(seconds: 5);
+  static const Duration marketCheckInterval = Duration(seconds: 2);
 
   /// Per-provider minimum intervals (rate-limit protection).
   static const Duration cryptoMinInterval = Duration(seconds: 30);
   static const Duration globalCurrencyMinInterval = Duration(seconds: 60);
 
   /// Iranian free-market / gold / coin feed (TGJU): live, keyless.
-  static const Duration iranianMarketMinInterval = Duration(seconds: 15);
+  static const Duration iranianMarketMinInterval = Duration(seconds: 5);
 
   /// Cache-buster bucket for the Iranian feed. All clients polling inside the
   /// same bucket share ONE CDN object, so the origin sees one fetch per
   /// bucket while data is never older than the bucket width.
-  static const Duration iranianMarketCacheBucket = Duration(seconds: 10);
+  static const Duration iranianMarketCacheBucket = Duration(seconds: 5);
   static const Duration snapshotFallbackInterval = Duration(minutes: 15);
 
   static const Duration requestTimeout = Duration(seconds: 12);
