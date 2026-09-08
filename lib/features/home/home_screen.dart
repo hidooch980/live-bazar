@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/theme.dart';
 import '../../config/asset_catalog.dart';
 import '../../core/utils/fa_number.dart';
+import '../../core/utils/jalali_date.dart';
 import '../../domain/entities/price_quote.dart';
 import '../../services/market_pulse_service.dart';
 import '../../state/app_providers.dart';
@@ -269,11 +272,7 @@ class _ConnectionHeader extends ConsumerWidget {
             size: 20,
           ),
           const SizedBox(width: 8),
-          Text(
-            'بررسی بازار: هر ${5.faDigits} ثانیه',
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          const Spacer(),
+          const Expanded(child: _TehranDateLabel()),
           const _TomanToggle(),
           const SizedBox(width: 8),
           Container(
@@ -295,6 +294,61 @@ class _ConnectionHeader extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Iranian date, weekday and Tehran clock («تاریخ و روز ایران»).
+///
+/// This replaced the visible refresh countdown: the cadence is an
+/// implementation detail, while the date the market is trading on is what
+/// a reader actually needs next to the prices.
+class _TehranDateLabel extends StatefulWidget {
+  const _TehranDateLabel();
+
+  @override
+  State<_TehranDateLabel> createState() => _TehranDateLabelState();
+}
+
+class _TehranDateLabelState extends State<_TehranDateLabel> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    // Only the clock text: one repaint a second, no network work.
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tehran = DateTime.now().toUtc().add(
+      const Duration(hours: 3, minutes: 30),
+    );
+    final jalali = JalaliDate.of(tehran);
+    final hh = tehran.hour.toString().padLeft(2, '0').faString;
+    final mm = tehran.minute.toString().padLeft(2, '0').faString;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          jalali.longFa,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+        ),
+        Text(
+          'به وقت تهران $hh:$mm',
+          style: TextStyle(fontSize: 11, color: Theme.of(context).hintColor),
+        ),
+      ],
     );
   }
 }

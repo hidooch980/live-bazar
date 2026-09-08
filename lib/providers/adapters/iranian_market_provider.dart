@@ -40,6 +40,8 @@ class IranianMarketProvider implements IPriceProvider {
     'https://call1.tgju.org/ajax.json',
     'https://call2.tgju.org/ajax.json',
     'https://call3.tgju.org/ajax.json',
+    'https://call4.tgju.org/ajax.json',
+    'https://call5.tgju.org/ajax.json',
   ];
 
   /// TGJU indicator key -> catalog asset id.
@@ -59,6 +61,33 @@ class IranianMarketProvider implements IPriceProvider {
     'price_rub': 'ir_rub',
     'price_iqd': 'ir_iqd',
     'price_afn': 'ir_afn',
+    'price_pkr': 'ir_pkr',
+    'price_inr': 'ir_inr',
+    'price_qar': 'ir_qar',
+    'price_kwd': 'ir_kwd',
+    'price_bhd': 'ir_bhd',
+    'price_omr': 'ir_omr',
+    'price_sar': 'ir_sar',
+    'price_jod': 'ir_jod',
+    'price_syp': 'ir_syp',
+    'price_myr': 'ir_myr',
+    'price_thb': 'ir_thb',
+    'price_sgd': 'ir_sgd',
+    'price_hkd': 'ir_hkd',
+    'price_krw': 'ir_krw',
+    'price_nzd': 'ir_nzd',
+    'price_sek': 'ir_sek',
+    'price_nok': 'ir_nok',
+    'price_dkk': 'ir_dkk',
+    'price_pln': 'ir_pln',
+    'price_ron': 'ir_ron',
+    'price_azn': 'ir_azn',
+    'price_amd': 'ir_amd',
+    'price_gel': 'ir_gel',
+    'price_egp': 'ir_egp',
+    'price_bdt': 'ir_bdt',
+    'price_lkr': 'ir_lkr',
+    'price_npr': 'ir_npr',
     // 24/7 — the only Toman quote still moving after the bazaar closes.
     'crypto-tether-irr': 'usdt_irt',
     // Gold in Rial, plus the global ounces in USD.
@@ -68,6 +97,7 @@ class IranianMarketProvider implements IPriceProvider {
     'ons': 'xau_usd',
     'silver': 'silver',
     'gold_futures': 'gold_abshodeh',
+    'gold_mini_size': 'gold_abshodeh_mini',
     // Coins (Rial).
     'sekee': 'coin_emami',
     'sekeb': 'coin_bahar',
@@ -76,6 +106,8 @@ class IranianMarketProvider implements IPriceProvider {
     'gerami': 'coin_gram',
     'retail_sekee': 'coin_emami_retail',
     // Premiums published by TGJU, not computed here.
+    'sekeb_blubber': 'coin_bahar_bubble',
+    'gerami_blubber': 'coin_gram_bubble',
     'nim_blubber': 'coin_half_bubble',
     'rob_blubber': 'coin_quarter_bubble',
     // Index points and USD-per-barrel: neither is Rial, so neither is
@@ -110,20 +142,34 @@ class IranianMarketProvider implements IPriceProvider {
   String? _lastSource;
   String get activeSource => _lastSource ?? '-';
 
+  /// Last mirror that actually returned quotes.
+  String? _preferred;
+
+  List<String> _orderedEndpoints() {
+    final p = _preferred;
+    if (p == null || !endpoints.contains(p)) return endpoints;
+    return [p, ...endpoints.where((e) => e != p)];
+  }
+
   @override
   Future<bool> healthCheck() async => true;
 
   @override
   Future<ProviderResult> getLatestPrices(Set<String> assetIds) async {
     Object? lastError;
-    for (final url in endpoints) {
+    // The mirror that answered last time goes first: a dead mirror costs a
+    // full timeout, and paying that on every 5-second cycle is what makes
+    // the Iranian feed look frozen when one host is down.
+    for (final url in _orderedEndpoints()) {
       final r = await _fetch(url, assetIds);
       if (r.isSuccess && r.quotes.isNotEmpty) {
+        _preferred = url;
         _lastSource = Uri.parse(url).host;
         return r;
       }
       lastError = r.error;
     }
+    _preferred = null;
     return ProviderResult(
       quotes: [],
       error: lastError is AppException
