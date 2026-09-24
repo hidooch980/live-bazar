@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-24T20:34:44Z",
+  "timestamp": "2026-09-24T23:36:42Z",
   "source": "github-actions-static-snapshot",
   "status": "SNAPSHOT",
   "quotes": {
@@ -9,11 +9,11 @@
       "name": "Bitcoin",
       "nameFa": "بیت‌کوین",
       "category": "crypto",
-      "price": 84221,
-      "changePercent": -0.1135573961025902,
+      "price": 84413,
+      "changePercent": -0.08630532815300566,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:34:44Z",
+      "timestamp": "2026-09-24T23:36:42Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -24,11 +24,11 @@
       "name": "Ethereum",
       "nameFa": "اتریوم",
       "category": "crypto",
-      "price": 2687.07,
-      "changePercent": 0.5554532003311399,
+      "price": 2691.44,
+      "changePercent": 0.25632491448279543,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:34:44Z",
+      "timestamp": "2026-09-24T23:36:42Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -39,11 +39,11 @@
       "name": "Tether",
       "nameFa": "تتر",
       "category": "crypto",
-      "price": 0.999712,
-      "changePercent": -0.01654306928242493,
+      "price": 0.9997,
+      "changePercent": -0.019848991284714217,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:34:44Z",
+      "timestamp": "2026-09-24T23:36:42Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -166,7 +166,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:57Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -181,7 +181,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -196,7 +196,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -211,7 +211,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -226,7 +226,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T11:53:09Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -241,7 +241,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -256,7 +256,7 @@
       "changePercent": 0.0,
       "unit": "گرم",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -271,7 +271,7 @@
       "changePercent": 0.0,
       "unit": "گرم",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -286,7 +286,7 @@
       "changePercent": 0.0,
       "unit": "مثقال",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:57Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -297,11 +297,11 @@
       "name": "Gold Ounce / USD",
       "nameFa": "انس جهانی طلا",
       "category": "gold",
-      "price": 4266.03,
-      "changePercent": -0.42,
+      "price": 4272.69,
+      "changePercent": 0.17,
       "unit": "اونس",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:34:22Z",
+      "timestamp": "2026-09-24T23:35:31Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -312,11 +312,11 @@
       "name": "Silver Ounce / USD",
       "nameFa": "انس جهانی نقره",
       "category": "gold",
-      "price": 63.6,
-      "changePercent": -1.21,
+      "price": 63.74,
+      "changePercent": 0.27,
       "unit": "اونس",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:34:22Z",
+      "timestamp": "2026-09-24T23:36:19Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -331,7 +331,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:51Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -346,7 +346,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:57Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -361,7 +361,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T07:30:32Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -376,7 +376,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T07:30:32Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -391,7 +391,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T07:33:20Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -406,7 +406,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -421,7 +421,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -436,7 +436,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -451,7 +451,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T07:40:15Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -466,7 +466,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:45Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -481,7 +481,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:28:57Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -496,7 +496,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:45Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -507,11 +507,11 @@
       "name": "Tether in Toman",
       "nameFa": "تتر (تومان) — ۲۴ ساعته",
       "category": "iranianCurrency",
-      "price": 233586.0,
-      "changePercent": -0.01,
+      "price": 233954.0,
+      "changePercent": 0.15,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T20:34:24Z",
+      "timestamp": "2026-09-24T23:36:24Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -526,7 +526,7 @@
       "changePercent": 0.0,
       "unit": "مثقال",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:56Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -541,7 +541,7 @@
       "changePercent": 0.0,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:56Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -556,7 +556,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -571,7 +571,7 @@
       "changePercent": 0.0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-09-24T13:29:55Z",
+      "timestamp": "2026-09-23T20:30:00Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
@@ -597,11 +597,11 @@
       "name": "Brent crude",
       "nameFa": "نفت برنت",
       "category": "commodity",
-      "price": 107.43,
-      "changePercent": 0.0,
+      "price": 106.17,
+      "changePercent": -1.19,
       "unit": "بشکه",
       "currency": "USD",
-      "timestamp": "2026-09-24T20:29:36Z",
+      "timestamp": "2026-09-24T23:35:34Z",
       "source": "TGJU",
       "status": "LIVE",
       "confidence": 1.0
