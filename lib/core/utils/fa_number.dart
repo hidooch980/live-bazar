@@ -18,7 +18,12 @@ extension FaNumber on num {
   );
 
   String faPrice({int fraction = 0}) {
-    final s = toStringAsFixed(fraction);
+    // toStringAsFixed switches to exponent notation from 1e21 ('3.5e+21'),
+    // which the split below would have cut down to «۳».
+    final s = isFinite && abs() >= 1e21
+        ? BigInt.from(this).toString() +
+              (fraction > 0 ? '.${'0' * fraction}' : '')
+        : toStringAsFixed(fraction);
     final parts = s.split('.');
     final intPart = _group(parts[0]);
     return fraction > 0 ? '$intPart.${parts[1]}'.faString : intPart.faString;

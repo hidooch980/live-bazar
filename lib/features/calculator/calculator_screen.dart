@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,33 +25,86 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 
 /// Enough decimals to stay meaningful across nine orders of magnitude:
 /// one coin is ~1035 dollars, one dollar is ~0.00097 coins.
+///
+/// Below 0.0001 the decimals grow with the magnitude so at least four
+/// significant digits survive: a fixed ten decimals printed 9.14e-10 as
+/// «۰.۰۰۰۰۰۰۰۰۰۹» and anything under 5e-11 as all zeros.
 String formatConversionResult(double v) {
   final abs = v.abs();
-  final fraction = abs >= 1000
-      ? 0
-      : abs >= 1
-      ? 4
-      : abs >= 0.0001
-      ? 8
-      : 10;
+  final int fraction;
+  if (abs >= 1000) {
+    fraction = 0;
+  } else if (abs >= 1) {
+    fraction = 4;
+  } else if (abs >= 0.0001 || abs == 0) {
+    fraction = 8;
+  } else {
+    final magnitude = (math.log(abs) / math.ln10).floor();
+    fraction = (3 - magnitude).clamp(10, 20);
+  }
   return v.faPrice(fraction: fraction).faString;
 }
+
+/// Thousands separators a user may type or paste: ASCII comma, Arabic
+/// comma «،» and the Arabic thousands mark «٬».
+final _thousands = RegExp('[,،٬]');
 
 /// Amount as a human types it: Persian or Arabic-Indic digits, thousands
 /// separators, a Persian decimal mark, or a trailing/leading space.
 ///
 /// Returns null for anything that is not a usable positive amount, so the
 /// screen can say what is wrong instead of silently showing nothing.
+///
+/// A separator is only accepted where a thousands separator belongs.
+/// Stripping it anywhere read a decimal comma — «1,5» — as fifteen.
 double? parseAmountInput(String raw) {
   final normalized = toAsciiDigits(raw)
       .replaceAll('٫', '.')
-      .replaceAll('،', '')
-      .replaceAll(',', '')
       .replaceAll(RegExp(r'\s'), '');
   if (normalized.isEmpty) return null;
-  final v = double.tryParse(normalized);
+  final parts = normalized.split('.');
+  if (parts.length > 2) return null;
+  final whole = parts.first;
+  if (whole.contains(_thousands) &&
+      !RegExp(r'^\d{1,3}([,،٬]\d{3})+$').hasMatch(whole)) {
+    return null;
+  }
+  final plain = parts.length == 2
+      ? '${whole.replaceAll(_thousands, '')}.${parts[1]}'
+      : whole.replaceAll(_thousands, '');
+  if (!RegExp(r'^(\d+\.?\d*|\.\d+)$').hasMatch(plain)) return null;
+  final v = double.tryParse(plain);
   if (v == null || !v.isFinite || v <= 0) return null;
   return v;
+}
+
+/// Assets the converter may offer, in catalog order: enabled, tradable,
+/// expressible in Toman or USD, and carrying a quote the app would show.
+///
+/// A dataConflict / unavailable quote is still on the snapshot (the
+/// anomaly gate keeps it, flagged) but must never be converted with; and
+/// `fx_irr` is a rate, not a price, so it can never convert to anything.
+List<String> calculatorAssetIds(Map<String, PriceQuote> quotes) => [
+  for (final d in AssetCatalog.all.where((d) => d.enabled && d.tradable))
+    if (quotes[d.id] case final q?)
+      if (q.price > 0 &&
+          q.status.isDisplayable &&
+          PriceDisplay.unitOf(q) != QuoteUnit.none)
+        d.id,
+];
+
+/// Keeps a remembered pair valid when a side drops out of [ids], without
+/// ever collapsing both sides onto the same asset when another exists.
+(String, String) resolveSelection(List<String> ids, String from, String to) {
+  if (ids.isEmpty) return (from, to);
+  String other(String avoid) =>
+      ids.firstWhere((id) => id != avoid, orElse: () => ids.first);
+  final fromOk = ids.contains(from);
+  final toOk = ids.contains(to);
+  if (fromOk && toOk) return (from, to);
+  if (toOk) return (other(to), to);
+  final f = fromOk ? from : ids.first;
+  return (f, other(f));
 }
 
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
@@ -68,8 +123,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final state = ref.watch(marketControllerProvider);
     final snap = state.snapshot;
     final options = <_Option>[
-      for (final d in AssetCatalog.all.where((d) => d.enabled && d.tradable))
-        if (snap?.quotes[d.id] != null) _Option(d, snap!.quotes[d.id]!),
+      for (final id in calculatorAssetIds(snap?.quotes ?? const {}))
+        _Option(AssetCatalog.byId(id)!, snap!.quotes[id]!),
     ];
 
     if (snap == null || options.isEmpty) {
@@ -91,15 +146,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
     // A remembered selection can disappear from the snapshot (a source
     // dropped out). Fall back to something that exists rather than
-    // rendering a dropdown with a value not in its item list, which throws.
-    final ids = {for (final o in options) o.def.id};
-    if (!ids.contains(_from)) _from = options.first.def.id;
-    if (!ids.contains(_to)) {
-      _to = options
-          .firstWhere((o) => o.def.id != _from, orElse: () => options.first)
-          .def
-          .id;
-    }
+    // rendering a picker with a value not in its item list, which throws —
+    // and never onto the asset already on the other side.
+    final (from0, to0) = resolveSelection(
+      [for (final o in options) o.def.id],
+      _from,
+      _to,
+    );
+    _from = from0;
+    _to = to0;
 
     final rate = tomanRateOf(snap);
     final from = snap.quotes[_from]!;
@@ -143,7 +198,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             controller: _amountCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9۰-۹٠-٩.,٫، ]')),
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9۰-۹٠-٩.,٫،٬ ]')),
             ],
             decoration: InputDecoration(
               labelText: 'مقدار',
@@ -206,7 +261,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     result == null
                         ? '—'
                         : '${formatConversionResult(result)} '
-                              '${_unitLabel(to)}',
+                              '${conversionUnitLabel(to)}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 22,
@@ -236,13 +291,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 }
 
-/// What the result is counted in: Toman for a free-market currency row,
-/// otherwise units of the asset itself.
-String _unitLabel(PriceQuote q) =>
-    PriceDisplay.unitOf(q) == QuoteUnit.toman &&
-        q.category == AssetCategory.iranianCurrency
-    ? 'تومان'
-    : q.symbol;
+/// What the result is counted in: units of the target asset itself.
+///
+/// The result is a COUNT of [q] — «۹۹٫۹۵» free-market dollars for one gram
+/// of gold — so it is never Toman, even when [q] is priced in Toman. A pair
+/// symbol is cut to the unit actually counted ('USD/IRR-FM' → 'USD',
+/// 'BTC/USD' → 'BTC').
+@visibleForTesting
+String conversionUnitLabel(PriceQuote q) => q.symbol.split('/').first;
 
 /// Where the numbers came from — a converted figure with no provenance is
 /// exactly what this app promises never to show.
