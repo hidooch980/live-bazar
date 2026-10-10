@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="16dp"
+    android:layoutDirection="rtl" android:background="@drawable/widget_glass_bg">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical">
+        <ImageView android:layout_width="14dp" android:layout_height="14dp" android:src="@mipmap/ic_launcher" android:importantForAccessibility="no"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="5dp" android:text="بازار مولیدو" android:textSize="13sp" android:textStyle="bold" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+        <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+        <LinearLayout android:id="@+id/widget_live" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical" android:visibility="gone"
+            android:background="@drawable/widget_pill_live" android:paddingStart="8dp" android:paddingEnd="8dp"
+            android:paddingTop="2dp" android:paddingBottom="2dp">
+            <ImageView android:layout_width="6dp" android:layout_height="6dp" android:src="@drawable/widget_live_dot"
+                android:importantForAccessibility="no"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp"
+                android:text="زنده" android:textSize="9sp" android:textColor="#4ADE80" android:textStyle="bold"/>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="6dp" android:orientation="vertical">
+        <LinearLayout android:id="@+id/w_row_0" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_0" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_0" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+<FrameLayout android:id="@+id/w_div_1" android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_1" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_1" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_1" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+<FrameLayout android:id="@+id/w_div_2" android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_2" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_2" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_2" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+<FrameLayout android:id="@+id/w_div_3" android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_3" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_3" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_3" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+<FrameLayout android:id="@+id/w_div_4" android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_4" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_4" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_4" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_4" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+<FrameLayout android:id="@+id/w_div_5" android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_5" android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/w_icon_5" android:layout_width="30dp" android:layout_height="30dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="14sp"
+            android:maxLines="1" android:text="$"/>
+            <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:orientation="vertical">
+                <TextView android:id="@+id/w_label_5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                <TextView android:id="@+id/w_sub_5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="9sp" android:maxLines="1" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            </LinearLayout>
+            <ImageView android:id="@+id/w_spark_5" android:layout_width="64dp" android:layout_height="22dp"
+            android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:orientation="vertical" android:gravity="end">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="bottom">
+                    <TextView android:id="@+id/w_value_5" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:textSize="15sp" android:textStyle="bold" android:maxLines="1" android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+                    <TextView android:id="@+id/w_unit_5" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp" android:layout_marginBottom="2dp" android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+                </LinearLayout>
+                <TextView android:id="@+id/w_change_5" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:orientation="horizontal">
+        <TextView android:id="@+id/widget_updated" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content" android:textSize="9sp" android:maxLines="1" android:text="بدون داده" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+        <TextView android:id="@+id/widget_unit_note" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="9sp" android:text="قیمت‌ها به تومان" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+    </LinearLayout>
+
+</LinearLayout>

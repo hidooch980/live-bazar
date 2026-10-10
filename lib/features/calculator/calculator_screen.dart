@@ -9,6 +9,7 @@ import '../../core/utils/fa_number.dart';
 import '../../core/utils/price_display.dart';
 import '../../domain/entities/price_quote.dart';
 import '../../state/app_providers.dart';
+import '../../widgets/asset_search_sheet.dart';
 
 /// CALCULATOR (§25): converts between enabled assets using the latest
 /// VALID market data only.
@@ -107,6 +108,65 @@ List<String> calculatorAssetIds(Map<String, PriceQuote> quotes) => [
   return (f, other(f));
 }
 
+/// The plain Toman entry: the unit itself, not a market quote. One Toman
+/// is one Toman — nothing is estimated — and every other asset converts
+/// to it through the same Toman-rate chain as the rest of the app.
+const tomanAssetId = 'toman';
+
+const tomanDefinition = AssetDefinition(
+  id: tomanAssetId,
+  symbol: 'IRT',
+  name: 'Toman',
+  nameFa: 'تومان',
+  category: AssetCategory.iranianCurrency,
+  unit: 'تومان',
+  currency: 'IRR',
+);
+
+PriceQuote tomanQuote(DateTime nowUtc) => PriceQuote(
+  id: tomanAssetId,
+  symbol: 'IRT',
+  name: 'Toman',
+  nameFa: 'تومان',
+  category: AssetCategory.iranianCurrency,
+  price: 1,
+  change: 0,
+  changePercent: 0,
+  unit: 'تومان',
+  currency: 'IRR',
+  timestamp: nowUtc,
+  source: 'واحد پول',
+  status: QuoteStatus.live,
+);
+
+/// Shown next to a result built from a price that is not current, so a
+/// delayed, stale or previous-close figure never reads as live. Null when
+/// the price is current.
+@visibleForTesting
+String? priceAgeNote(PriceQuote q, DateTime nowUtc) {
+  if (q.id == tomanAssetId) return null;
+  final age = faAgeLabel(nowUtc.difference(q.timestamp.toUtc()));
+  return switch (q.status) {
+    QuoteStatus.previousClose => '${q.nameFa}: قیمت پایانی جلسه قبل',
+    QuoteStatus.delayed => '${q.nameFa}: آخرین قیمت منبع، $age',
+    QuoteStatus.stale ||
+    QuoteStatus.cached ||
+    QuoteStatus.fallback => '${q.nameFa}: قیمت قدیمی، $age',
+    _ when nowUtc.difference(q.timestamp.toUtc()) > const Duration(hours: 1) =>
+      '${q.nameFa}: $age',
+    _ => null,
+  };
+}
+
+/// «1,5» is someone typing a decimal comma: say how to write it instead of
+/// a bare «نامعتبر».
+@visibleForTesting
+String? amountInputHint(String raw) {
+  if (parseAmountInput(raw) != null) return null;
+  if (!raw.contains(_thousands)) return null;
+  return 'برای اعشار از «٫» استفاده کن (مثلاً ۱٫۵)';
+}
+
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   String _from = 'ir_usd';
   String _to = 'gold_18k';
@@ -122,21 +182,28 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(marketControllerProvider);
     final snap = state.snapshot;
-    final options = <_Option>[
+    final nowUtc = DateTime.now().toUtc();
+    final market = <_Option>[
       for (final id in calculatorAssetIds(snap?.quotes ?? const {}))
         _Option(AssetCatalog.byId(id)!, snap!.quotes[id]!),
     ];
+    final options = [
+      if (market.isNotEmpty) _Option(tomanDefinition, tomanQuote(nowUtc)),
+      ...market,
+    ];
+    final byId = {for (final o in options) o.def.id: o.quote};
 
-    if (snap == null || options.isEmpty) {
+    if (snap == null || market.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('ماشین‌حساب')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              state.isOffline
-                  ? 'آفلاین — داده معتبری برای تبدیل موجود نیست'
-                  : 'در حال دریافت داده بازار...',
+              calculatorEmptyMessage(
+                hasSnapshot: snap != null && snap.quotes.isNotEmpty,
+                offline: state.isOffline,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -157,8 +224,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _to = to0;
 
     final rate = tomanRateOf(snap);
-    final from = snap.quotes[_from]!;
-    final to = snap.quotes[_to]!;
+    final from = byId[_from]!;
+    final to = byId[_to]!;
     final amountText = _amountCtrl.text;
     final amount = parseAmountInput(amountText);
     final unitRatio = PriceDisplay.crossRate(from, to, rate);
@@ -167,7 +234,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (amountText.trim().isEmpty) {
       error = 'مقدار را وارد کنید';
     } else if (amount == null) {
-      error = 'مقدار نامعتبر است — یک عدد بزرگ‌تر از صفر وارد کنید';
+      error =
+          amountInputHint(amountText) ??
+          'مقدار نامعتبر است — یک عدد بزرگ‌تر از صفر وارد کنید';
     } else if (_from == _to) {
       error = null;
     } else if (unitRatio == null) {
@@ -277,6 +346,32 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         color: Theme.of(context).hintColor,
                       ),
                     ),
+                    for (final note in [
+                      priceAgeNote(from, nowUtc),
+                      if (_to != _from) priceAgeNote(to, nowUtc),
+                    ].nonNulls) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.schedule,
+                            size: 14,
+                            color: Colors.orange,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              note,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -298,7 +393,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 /// symbol is cut to the unit actually counted ('USD/IRR-FM' → 'USD',
 /// 'BTC/USD' → 'BTC').
 @visibleForTesting
-String conversionUnitLabel(PriceQuote q) => q.symbol.split('/').first;
+String conversionUnitLabel(PriceQuote q) =>
+    q.id == tomanAssetId ? 'تومان' : q.symbol.split('/').first;
+
+/// The no-options message. Data that ARRIVED but is all unusable (every
+/// row rejected or unpriced) is not «در حال دریافت».
+@visibleForTesting
+String calculatorEmptyMessage({
+  required bool hasSnapshot,
+  required bool offline,
+}) {
+  if (hasSnapshot) {
+    return 'داده بازار رسید، اما فعلاً هیچ قیمت معتبری برای تبدیل نیست — '
+        'کمی بعد دوباره امتحان کن';
+  }
+  return offline
+      ? 'آفلاین — داده معتبری برای تبدیل موجود نیست'
+      : 'در حال دریافت داده بازار...';
+}
 
 /// Where the numbers came from — a converted figure with no provenance is
 /// exactly what this app promises never to show.
@@ -332,16 +444,13 @@ class _DetailCard extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            Text(
-              '${from.nameFa}: ${from.source} — '
-              '${faAgeLabel(now.difference(from.timestamp.toUtc()))}',
-              style: hint,
-            ),
-            Text(
-              '${to.nameFa}: ${to.source} — '
-              '${faAgeLabel(now.difference(to.timestamp.toUtc()))}',
-              style: hint,
-            ),
+            for (final q in [from, to])
+              if (q.id != tomanAssetId)
+                Text(
+                  '${q.nameFa}: ${q.source} — '
+                  '${q.status == QuoteStatus.previousClose ? 'قیمت پایانی' : faAgeLabel(now.difference(q.timestamp.toUtc()))}',
+                  style: hint,
+                ),
             if (mixedUnits && rate != null) ...[
               const SizedBox(height: 6),
               Text(
@@ -363,20 +472,15 @@ class _Option {
   final AssetDefinition def;
   final PriceQuote quote;
 
-  String get label => '${def.nameFa} (${def.symbol})';
-
-  bool matches(String query) {
-    if (query.isEmpty) return true;
-    final q = toAsciiDigits(query).toLowerCase();
-    return def.nameFa.contains(query) ||
-        def.name.toLowerCase().contains(q) ||
-        def.symbol.toLowerCase().contains(q) ||
-        def.id.contains(q);
-  }
+  AssetSearchOption get search => AssetSearchOption(
+    id: def.id,
+    nameFa: def.nameFa,
+    symbol: def.symbol,
+    name: def.name,
+  );
 }
 
-/// Tap-to-open searchable picker. A dropdown with ninety Persian labels is
-/// unusable on a phone; a search sheet finds «روپیه» in two keystrokes.
+/// Tap-to-open searchable picker.
 class _AssetPickerField extends StatelessWidget {
   const _AssetPickerField({
     required this.label,
@@ -396,10 +500,10 @@ class _AssetPickerField extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(6),
       onTap: () async {
-        final picked = await showModalBottomSheet<String>(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => _AssetSearchSheet(title: label, options: options),
+        final picked = await showAssetSearchSheet(
+          context,
+          title: label,
+          options: [for (final o in options) o.search],
         );
         if (picked != null) onChanged(picked);
       },
@@ -409,63 +513,7 @@ class _AssetPickerField extends StatelessWidget {
           border: const OutlineInputBorder(),
           suffixIcon: const Icon(Icons.search),
         ),
-        child: Text(selected.label, overflow: TextOverflow.ellipsis),
-      ),
-    );
-  }
-}
-
-class _AssetSearchSheet extends StatefulWidget {
-  const _AssetSearchSheet({required this.title, required this.options});
-
-  final String title;
-  final List<_Option> options;
-
-  @override
-  State<_AssetSearchSheet> createState() => _AssetSearchSheetState();
-}
-
-class _AssetSearchSheetState extends State<_AssetSearchSheet> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final matches = widget.options.where((o) => o.matches(_query)).toList();
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.75,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: '${widget.title} — جست‌وجو',
-                  prefixIcon: const Icon(Icons.search),
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (v) => setState(() => _query = v.trim()),
-              ),
-            ),
-            Expanded(
-              child: matches.isEmpty
-                  ? const Center(child: Text('موردی پیدا نشد'))
-                  : ListView.builder(
-                      itemCount: matches.length,
-                      itemBuilder: (context, i) {
-                        final o = matches[i];
-                        return ListTile(
-                          title: Text(o.def.nameFa),
-                          subtitle: Text(o.def.symbol),
-                          onTap: () => Navigator.of(context).pop(o.def.id),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+        child: Text(selected.search.label, overflow: TextOverflow.ellipsis),
       ),
     );
   }

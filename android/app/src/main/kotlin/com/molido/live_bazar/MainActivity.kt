@@ -16,6 +16,23 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "molido/widget_live")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> try {
+                        WidgetLiveService.start(this)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.error("start_failed", e.message, null)
+                    }
+                    "stop" -> {
+                        WidgetLiveService.stop(this)
+                        result.success(true)
+                    }
+                    "isRunning" -> result.success(WidgetLiveService.running)
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
             .setMethodCallHandler { call, result ->
                 when (call.method) {

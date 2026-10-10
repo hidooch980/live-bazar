@@ -8,12 +8,15 @@ import '../data/cache/local_state_store.dart';
 import '../services/alert_service.dart';
 import '../services/background_alert_worker.dart';
 import '../services/connectivity_service.dart';
+import '../services/daily_summary_service.dart';
 import '../services/historical_snapshot_service.dart';
+import '../services/home_widget_service.dart';
 import '../services/market_refresh_engine.dart';
 import '../services/notification_service.dart';
 import '../services/portfolio_service.dart';
 import '../services/timezone_service.dart';
 import '../services/watchlist_service.dart';
+import '../services/widget/widget_background.dart';
 import '../state/app_providers.dart';
 
 Future<void> main() async {
@@ -56,6 +59,18 @@ Future<void> main() async {
   await BackgroundAlertWorker.initialize();
   await BackgroundAlertWorker.restore(store);
 
+  // 4c) Home widget: honour a «توقف» tapped in the live notification
+  // while the app was closed, mirror the config for background isolates,
+  // and bring the live service in line (it can only be started from the
+  // foreground, so this is also how it comes back after a reboot).
+  await _applyLiveStoppedByUser(store);
+  await HomeWidgetService.mirrorConfig(store);
+  await WidgetLiveService.registerCallback();
+  await WidgetLiveService.apply(await HomeWidgetService.loadConfig(store));
+
+  // 4d) Opt-in daily summary (re-applied every launch).
+  await DailySummaryService.restore(store);
+
   // 5) Connectivity bridge: network restored -> immediate refresh (§6).
   ConnectivityService(engine).start();
 
@@ -75,4 +90,15 @@ Future<void> main() async {
       child: const MolidoApp(),
     ),
   );
+}
+
+/// The live notification's «توقف» writes this flag natively; make it stick
+/// so the next launch does not start the service again.
+Future<void> _applyLiveStoppedByUser(KeyValueStore store) async {
+  try {
+    final data = HomeWidgetService.data;
+    if (await data.read('live_stopped_by_user') != '1') return;
+    await HomeWidgetService.saveMode(store, WidgetRefreshMode.lowPower);
+    await data.save('live_stopped_by_user', null);
+  } catch (_) {}
 }

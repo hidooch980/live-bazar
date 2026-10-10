@@ -10,6 +10,7 @@ import '../../services/historical_snapshot_service.dart';
 import '../../services/market_score_service.dart';
 import '../../state/app_providers.dart';
 import '../../widgets/quote_tile.dart';
+import '../share/price_share_card.dart';
 
 /// PRICE DETAIL (§26): everything we really know about ONE asset.
 class DetailScreen extends ConsumerWidget {
@@ -29,6 +30,12 @@ class DetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(def?.nameFa ?? assetId),
         actions: [
+          if (quote != null)
+            IconButton(
+              tooltip: 'اشتراک کارت قیمت',
+              icon: const Icon(Icons.ios_share),
+              onPressed: () => showShareCardSheet(context, ref, ids: [assetId]),
+            ),
           IconButton(
             icon: Icon(
               isFav ? Icons.star : Icons.star_border,

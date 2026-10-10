@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_description">قیمت دلار، طلا و سکه روی صفحه اصلی</string>
+    <string name="widget_description">بازار مولیدو — متوسط: سه دارایی اول</string>
+    <string name="widget_small_description">بازار مولیدو — کوچک: دارایی اول</string>
+    <string name="widget_large_description">بازار مولیدو — بزرگ: تا شش دارایی با نمودار</string>
 </resources>

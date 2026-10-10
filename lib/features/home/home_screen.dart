@@ -13,6 +13,7 @@ import '../../state/app_providers.dart';
 import '../../widgets/quote_tile.dart';
 import '../alerts/alerts_screen.dart';
 import '../portfolio/portfolio_screen.dart';
+import '../share/price_share_card.dart';
 import 'customize_home_screen.dart';
 import 'home_layout.dart';
 
@@ -39,6 +40,11 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('بازار مولیدو'),
         actions: [
+          IconButton(
+            tooltip: 'اشتراک کارت قیمت',
+            icon: const Icon(Icons.ios_share),
+            onPressed: () => showShareCardSheet(context, ref),
+          ),
           IconButton(
             tooltip: 'شخصی‌سازی خانه',
             icon: const Icon(Icons.tune),

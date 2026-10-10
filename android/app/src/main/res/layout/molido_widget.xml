@@ -1,93 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:layoutDirection="rtl"
-    android:background="@drawable/widget_background">
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="14dp"
+    android:layoutDirection="rtl" android:background="@drawable/widget_glass_bg">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="بازار مولیدو"
-        android:textColor="@color/widget_gold"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="دلار"
-            android:textColor="@color/widget_label"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/widget_usd_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:text="—" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical">
+        <ImageView android:layout_width="14dp" android:layout_height="14dp" android:src="@mipmap/ic_launcher" android:importantForAccessibility="no"/>
+        <TextView android:id="@+id/widget_title" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="5dp" android:text="بازار مولیدو" android:textSize="12sp" android:textStyle="bold" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+        <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+        <TextView android:id="@+id/widget_updated" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="9sp" android:maxLines="1" android:text="بدون داده" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="8dp" android:orientation="horizontal">
+        <LinearLayout android:id="@+id/w_row_0" android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="1" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:id="@+id/w_icon_0" android:layout_width="22dp" android:layout_height="22dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="11sp"
+            android:maxLines="1" android:text="$"/>
+                <TextView android:id="@+id/w_label_0" android:layout_width="0dp" android:layout_weight="1"
+                    android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textSize="11sp"
+                    android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            </LinearLayout>
+            <TextView android:id="@+id/w_value_0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"
+                android:autoSizeTextType="uniform" android:autoSizeMinTextSize="10sp" android:autoSizeMaxTextSize="15sp"
+                android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            <TextView android:id="@+id/w_unit_0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            <ImageView android:id="@+id/w_spark_0" android:layout_width="match_parent" android:layout_height="20dp"
+            android:layout_marginTop="2dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_change_0" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="3dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+        </LinearLayout>
+<FrameLayout android:layout_width="1dp" android:layout_height="match_parent"
+            android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_1" android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="1" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:id="@+id/w_icon_1" android:layout_width="22dp" android:layout_height="22dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="11sp"
+            android:maxLines="1" android:text="$"/>
+                <TextView android:id="@+id/w_label_1" android:layout_width="0dp" android:layout_weight="1"
+                    android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textSize="11sp"
+                    android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            </LinearLayout>
+            <TextView android:id="@+id/w_value_1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"
+                android:autoSizeTextType="uniform" android:autoSizeMinTextSize="10sp" android:autoSizeMaxTextSize="15sp"
+                android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            <TextView android:id="@+id/w_unit_1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            <ImageView android:id="@+id/w_spark_1" android:layout_width="match_parent" android:layout_height="20dp"
+            android:layout_marginTop="2dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_change_1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="3dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+        </LinearLayout>
+<FrameLayout android:layout_width="1dp" android:layout_height="match_parent"
+            android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@drawable/widget_divider"/>
+<LinearLayout android:id="@+id/w_row_2" android:layout_width="0dp" android:layout_height="match_parent"
+            android:layout_weight="1" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:id="@+id/w_icon_2" android:layout_width="22dp" android:layout_height="22dp"
+            android:gravity="center" android:background="@drawable/widget_icon_green"
+            android:textColor="#FFFFFFFF" android:textStyle="bold" android:textSize="11sp"
+            android:maxLines="1" android:text="$"/>
+                <TextView android:id="@+id/w_label_2" android:layout_width="0dp" android:layout_weight="1"
+                    android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textSize="11sp"
+                    android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:text="" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            </LinearLayout>
+            <TextView android:id="@+id/w_value_2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:textSize="15sp" android:textStyle="bold" android:maxLines="1"
+                android:autoSizeTextType="uniform" android:autoSizeMinTextSize="10sp" android:autoSizeMaxTextSize="15sp"
+                android:text="—" android:textColor="#FFFFFFFF" android:shadowColor="#66000000" android:shadowRadius="3" android:shadowDy="1"/>
+            <TextView android:id="@+id/w_unit_2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textSize="8sp" android:text="" android:textColor="#C8FFFFFF" android:shadowColor="#55000000" android:shadowRadius="2"/>
+            <ImageView android:id="@+id/w_spark_2" android:layout_width="match_parent" android:layout_height="20dp"
+            android:layout_marginTop="2dp" android:scaleType="fitXY" android:importantForAccessibility="no"/>
+            <TextView android:id="@+id/w_change_2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginTop="3dp" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="1dp" android:paddingBottom="1dp"
+            android:background="@drawable/widget_pill_up" android:textColor="#4ADE80"
+            android:textSize="9sp" android:textStyle="bold" android:maxLines="1" android:text=""/>
+        </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="4dp">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="طلای ۱۸"
-            android:textColor="@color/widget_label"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/widget_gold_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:text="—" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="4dp">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="سکه امامی"
-            android:textColor="@color/widget_label"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/widget_coin_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/widget_text"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:text="—" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/widget_updated"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/widget_label"
-        android:textSize="10sp"
-        android:text="بدون داده" />
 </LinearLayout>

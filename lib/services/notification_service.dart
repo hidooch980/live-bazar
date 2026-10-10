@@ -40,6 +40,32 @@ class NotificationService {
 
   bool get isReady => _ready;
 
+  static const _summaryChannelId = 'molido_daily_summary';
+  static const _summaryChannelName = 'خلاصه روزانه بازار';
+
+  /// The opt-in end-of-day summary: one quiet notification, its own
+  /// channel so the user can silence it without silencing price alerts.
+  Future<void> showSummary({
+    required String title,
+    required String body,
+  }) async {
+    if (!_ready) return;
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _summaryChannelId,
+        _summaryChannelName,
+        importance: Importance.defaultImportance,
+        styleInformation: BigTextStyleInformation(body),
+      ),
+    );
+    await _plugin.show(
+      id: 0x5d41,
+      title: title,
+      body: body,
+      notificationDetails: details,
+    );
+  }
+
   /// Fires an immediate LOCAL notification for a triggered [rule].
   Future<void> showAlert({
     required AlertRule rule,

@@ -1,26 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:live_bazar/data/cache/local_state_store.dart';
 import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/core/utils/price_display.dart';
 import 'package:live_bazar/services/home_widget_service.dart';
-
-/// Records what publish hands to the widget, instead of the plugin.
-class _RecordingSink implements HomeWidgetSink {
-  final saves = <String, String?>{};
-  int saveCalls = 0;
-  int redraws = 0;
-  bool fail = false;
-
-  @override
-  Future<void> save(String key, String? value) async {
-    if (fail) throw StateError('no widget host');
-    saveCalls++;
-    saves[key] = value;
-  }
-
-  @override
-  Future<void> redraw() async => redraws++;
-}
 
 PriceQuote _q(
   String id, {
@@ -44,22 +28,50 @@ PriceQuote _q(
   status: status,
 );
 
+const _ids = HomeWidgetService.defaultAssets;
+
+Map<String, String?> _payload(
+  Map<String, PriceQuote> quotes, {
+  DateTime? nowUtc,
+  List<String> ids = _ids,
+}) => HomeWidgetService.payload(quotes, ids, nowUtc: nowUtc);
+
+List<Map<String, dynamic>> _rows(Map<String, String?> payload) =>
+    (jsonDecode(payload[HomeWidgetService.rowsKey]!) as List)
+        .cast<Map<String, dynamic>>();
+
+Map<String, dynamic>? _row(Map<String, String?> payload, String id) {
+  for (final r in _rows(payload)) {
+    if (r['id'] == id) return r;
+  }
+  return null;
+}
+
 void main() {
-  test('publishes the three headline prices in Toman', () {
-    final data = HomeWidgetService.payload({
+  test('publishes the three default prices in Toman, in order', () {
+    final data = _payload({
       'ir_usd': _q('ir_usd', price: 214000),
       'gold_18k': _q('gold_18k', price: 22195800),
       'coin_emami': _q('coin_emami', price: 221505000),
     });
 
-    expect(data['w_usd'], '۲۱۴,۰۰۰ تومان');
-    expect(data['w_gold'], '۲۲,۱۹۵,۸۰۰ تومان');
-    expect(data['w_coin'], '۲۲۱,۵۰۵,۰۰۰ تومان');
+    final rows = _rows(data);
+    expect([for (final r in rows) r['id']], _ids);
+    expect(rows[0]['v'], '۲۱۴,۰۰۰');
+    expect(rows[0]['u'], 'تومان');
+    expect(rows[1]['v'], '۲۲,۱۹۵,۸۰۰');
+    expect(rows[2]['v'], '۲۲۱,۵۰۵,۰۰۰');
     expect(data['w_updated'], startsWith('به‌روزرسانی'));
+    expect(data['w_v'], '2');
+    // The 0.6 keys are cleared so an old layout cannot show a dead number.
+    for (final k in HomeWidgetService.legacyKeys) {
+      expect(data.containsKey(k), isTrue);
+      expect(data[k], isNull);
+    }
   });
 
   test('an unusable quote is omitted, never shown stale or invented', () {
-    final data = HomeWidgetService.payload({
+    final data = _payload({
       'ir_usd': _q('ir_usd', price: 214000),
       // Rejected by the anomaly gate upstream.
       'gold_18k': _q('gold_18k', price: 0, status: QuoteStatus.dataConflict),
@@ -67,15 +79,15 @@ void main() {
       'coin_emami': _q('coin_emami', price: 0),
     });
 
-    expect(data.containsKey('w_usd'), isTrue);
-    expect(data.containsKey('w_gold'), isFalse);
-    expect(data.containsKey('w_coin'), isFalse);
+    expect(_row(data, 'ir_usd'), isNotNull);
+    expect(_row(data, 'gold_18k'), isNull);
+    expect(_row(data, 'coin_emami'), isNull);
   });
 
   test('nothing usable means nothing is written at all', () {
-    expect(HomeWidgetService.payload(const {}), isEmpty);
+    expect(_payload(const {}), isEmpty);
     expect(
-      HomeWidgetService.payload({
+      _payload({
         'ir_usd': _q('ir_usd', price: 1, status: QuoteStatus.unavailable),
       }),
       isEmpty,
@@ -83,7 +95,7 @@ void main() {
   });
 
   test('the time line is the OLDEST shown quote, never the newest', () {
-    final data = HomeWidgetService.payload({
+    final data = _payload({
       'ir_usd': _q('ir_usd', price: 1, ts: DateTime.utc(2026, 9, 1, 8)),
       'gold_18k': _q('gold_18k', price: 2, ts: DateTime.utc(2026, 9, 1, 11)),
     }, nowUtc: DateTime.utc(2026, 9, 1, 12));
@@ -96,7 +108,7 @@ void main() {
 
   test('an omitted quote does not set the time line', () {
     final now = DateTime.utc(2026, 9, 1, 12);
-    final data = HomeWidgetService.payload({
+    final data = _payload({
       'ir_usd': _q('ir_usd', price: 1, ts: DateTime.utc(2026, 9, 1, 11)),
       'gold_18k': _q(
         'gold_18k',
@@ -120,7 +132,7 @@ void main() {
       ts: DateTime.utc(2026, 8, 31, 20, 30),
       status: QuoteStatus.previousClose,
     );
-    final mixed = HomeWidgetService.payload({
+    final mixed = _payload({
       'ir_usd': _q('ir_usd', price: 1, ts: DateTime.utc(2026, 9, 1, 11)),
       'coin_emami': close,
     }, nowUtc: now);
@@ -135,9 +147,7 @@ void main() {
       ),
     );
 
-    final onlyClose = HomeWidgetService.payload({
-      'coin_emami': close,
-    }, nowUtc: now);
+    final onlyClose = _payload({'coin_emami': close}, nowUtc: now);
     expect(onlyClose['w_updated'], 'قیمت پایانی بازار');
   });
 
@@ -183,12 +193,204 @@ void main() {
     expect(await HomeWidgetService.isEnabled(store), isFalse);
   });
 
-  test('USD-denominated quotes are converted, not shown as dollars', () {
-    // Guard against a future headline asset that is not Rial-quoted.
-    final data = HomeWidgetService.payload({
-      'ir_usd': _q('ir_usd', price: 2140000, currency: 'IRR'),
+  test('the user order is kept and capped at six', () {
+    final ids = HomeWidgetService.sanitize([
+      'coin_emami',
+      'ir_usd',
+      'nope',
+      'ir_usd',
+      'fx_irr',
+      'gold_18k',
+      'usdt_irt',
+      'ir_eur',
+      'btc_usd',
+      'xau_usd',
+    ]);
+    expect(ids, [
+      'coin_emami',
+      'ir_usd',
+      'gold_18k',
+      'usdt_irt',
+      'ir_eur',
+      'btc_usd',
+    ]);
+    expect(HomeWidgetService.sanitize(['nope', 'fx_irr']), _ids);
+  });
+
+  test('selection, mode and enabled round-trip and are mirrored', () async {
+    HomeWidgetService.resetForTest();
+    final data = MemoryWidgetDataStore();
+    HomeWidgetService.data = data;
+    addTearDown(HomeWidgetService.resetForTest);
+    final store = InMemoryKeyValueStore();
+
+    expect(await HomeWidgetService.loadSelection(store), _ids);
+    await HomeWidgetService.saveSelection(store, ['btc_usd', 'ir_usd']);
+    await HomeWidgetService.saveMode(store, WidgetRefreshMode.live);
+    await HomeWidgetService.setEnabled(store, true);
+    await store.setString('proxy_config', '{"host":"p"}');
+    await HomeWidgetService.mirrorConfig(store);
+
+    final c = await HomeWidgetService.loadConfig(store);
+    expect(c.ids, ['btc_usd', 'ir_usd']);
+    expect(c.mode, WidgetRefreshMode.live);
+    expect(c.enabled, isTrue);
+    expect(await HomeWidgetService.readMirroredConfig(), c);
+    expect(data.values['cfg_proxy'], '{"host":"p"}');
+
+    await HomeWidgetService.resetSelection(store);
+    expect(await HomeWidgetService.loadSelection(store), _ids);
+    expect((await HomeWidgetService.readMirroredConfig()).ids, _ids);
+  });
+
+  test('a USD-quoted pick pulls in the dollar rate, Toman picks do not', () {
+    expect(HomeWidgetService.rateDependencies(_ids), isEmpty);
+    expect(HomeWidgetService.rateDependencies(['btc_usd']), {
+      'ir_usd',
+      'usdt_irt',
     });
-    expect(data['w_usd'], '۲,۱۴۰,۰۰۰ تومان');
+    expect(HomeWidgetService.rateDependencies(['fx_eur']), {
+      'ir_usd',
+      'usdt_irt',
+    });
+    expect(HomeWidgetService.rateDependencies(['bourse_index']), isEmpty);
+  });
+
+  test('change pill comes from the source change, never invented', () {
+    expect(HomeWidgetService.changeLabel(0.42), '▲ ۰٫۴۲٪');
+    expect(HomeWidgetService.changeLabel(-1.3), '▼ ۱٫۳۰٪');
+    expect(HomeWidgetService.changeLabel(0), '');
+    final data = _payload({
+      'ir_usd': PriceQuote(
+        id: 'ir_usd',
+        symbol: 'USD/IRR-FM',
+        name: 'USD',
+        nameFa: 'دلار آمریکا (بازار آزاد)',
+        category: AssetCategory.iranianCurrency,
+        price: 214000,
+        changePercent: -0.5,
+        unit: 'تومان',
+        currency: 'IRR',
+        timestamp: DateTime.utc(2026, 9, 1, 10),
+        source: 'TGJU',
+        status: QuoteStatus.live,
+      ),
+    }, nowUtc: DateTime.utc(2026, 9, 1, 10, 5));
+    final r = _row(data, 'ir_usd')!;
+    expect(r['d'], -1);
+    expect(r['c'], '▼ ۰٫۵۰٪');
+    expect(r['l'], 'دلار آمریکا');
+    expect(r['s'], 'بازار آزاد');
+    expect(r['g'], r'$');
+    expect(r['t'], 'green');
+    expect(r['st'], 0);
+  });
+
+  test('an old or delayed price is flagged stale for the widget', () {
+    final now = DateTime.utc(2026, 9, 1, 12);
+    final data = _payload({
+      'ir_usd': _q('ir_usd', price: 1, ts: DateTime.utc(2026, 9, 1, 11, 59)),
+      'gold_18k': _q('gold_18k', price: 2, ts: DateTime.utc(2026, 9, 1, 9)),
+      'coin_emami': _q(
+        'coin_emami',
+        price: 3,
+        ts: DateTime.utc(2026, 9, 1, 11, 59),
+        status: QuoteStatus.delayed,
+      ),
+    }, nowUtc: now);
+    expect(_row(data, 'ir_usd')!['st'], 0);
+    expect(_row(data, 'gold_18k')!['st'], 1);
+    expect(_row(data, 'coin_emami')!['st'], 1);
+  });
+
+  group('sparkline series', () {
+    test('only real observations, one per 30-minute bucket, 24 h max', () {
+      final series = <String, List<List<num>>>{};
+      final t0 = DateTime.utc(2026, 9, 1, 10);
+      for (var i = 0; i < 4; i++) {
+        HomeWidgetService.updateSeries(
+          series,
+          {
+            'ir_usd': _q(
+              'ir_usd',
+              price: 100.0 + i,
+              ts: t0.add(Duration(minutes: 10 * i)),
+            ),
+          },
+          ['ir_usd'],
+          nowUtc: t0.add(Duration(minutes: 10 * i)),
+        );
+      }
+      // 10:00, 10:10, 10:20 share a bucket (last price wins); 10:30 is new.
+      expect(series['ir_usd']!.length, 2);
+      expect(series['ir_usd']!.first[1], 102);
+      expect(series['ir_usd']!.last[1], 103);
+
+      // A day later the old points have aged out.
+      HomeWidgetService.updateSeries(
+        series,
+        {
+          'ir_usd': _q(
+            'ir_usd',
+            price: 200,
+            ts: t0.add(const Duration(hours: 30)),
+          ),
+        },
+        ['ir_usd'],
+        nowUtc: t0.add(const Duration(hours: 30)),
+      );
+      expect(series['ir_usd']!.length, 1);
+    });
+
+    test('unusable, previous-close and deselected assets add nothing', () {
+      final series = <String, List<List<num>>>{
+        'btc_usd': [
+          [1, 2],
+        ],
+      };
+      final changed = HomeWidgetService.updateSeries(
+        series,
+        {
+          'ir_usd': _q('ir_usd', price: 0),
+          'gold_18k': _q(
+            'gold_18k',
+            price: 5,
+            status: QuoteStatus.previousClose,
+          ),
+        },
+        ['ir_usd', 'gold_18k'],
+        nowUtc: DateTime.utc(2026, 9, 1, 10),
+      );
+      expect(series['ir_usd'] ?? const [], isEmpty);
+      expect(series['gold_18k'] ?? const [], isEmpty);
+      expect(series.containsKey('btc_usd'), isFalse);
+      expect(changed, isFalse);
+    });
+
+    test('normalized for drawing; fewer than two points draws nothing', () {
+      expect(HomeWidgetService.sparkOf(null), '');
+      expect(
+        HomeWidgetService.sparkOf([
+          [1, 5],
+        ]),
+        '',
+      );
+      expect(
+        HomeWidgetService.sparkOf([
+          [1, 10],
+          [2, 20],
+          [3, 15],
+        ]),
+        '0.00,1.00,0.50',
+      );
+      expect(
+        HomeWidgetService.sparkOf([
+          [1, 7],
+          [2, 7],
+        ]),
+        '0.50,0.50',
+      );
+    });
   });
 
   group('units come from PriceDisplay.unitOf, not from currency', () {
@@ -241,15 +443,16 @@ void main() {
   });
 
   group('publish', () {
-    late _RecordingSink sink;
+    late MemoryWidgetDataStore data;
     late InMemoryKeyValueStore store;
 
     setUp(() async {
       HomeWidgetService.resetForTest();
-      sink = _RecordingSink();
-      HomeWidgetService.sink = sink;
+      data = MemoryWidgetDataStore();
+      HomeWidgetService.data = data;
       store = InMemoryKeyValueStore();
       await HomeWidgetService.setEnabled(store, true);
+      data.saves = 0;
     });
 
     tearDown(HomeWidgetService.resetForTest);
@@ -260,51 +463,76 @@ void main() {
       'coin_emami': _q('coin_emami', price: 221505000),
     };
 
-    test('a quote missing this cycle is cleared, not left stale', () async {
+    List<String> shown() => [
+      for (final r in _rows(data.values)) r['id'] as String,
+    ];
+
+    test('a quote missing this cycle is dropped, not left stale', () async {
       await HomeWidgetService.publish(store, all);
-      expect(sink.saves['w_gold'], '۲۲,۱۹۵,۸۰۰ تومان');
+      expect(shown(), _ids);
 
       await HomeWidgetService.publish(store, {
         'ir_usd': _q('ir_usd', price: 215000),
         'coin_emami': _q('coin_emami', price: 221505000),
       });
-      // Removed, so the widget shows «—» rather than last cycle's gold
-      // under this cycle's time line.
-      expect(sink.saves.containsKey('w_gold'), isTrue);
-      expect(sink.saves['w_gold'], isNull);
-      expect(sink.saves['w_usd'], '۲۱۵,۰۰۰ تومان');
+      expect(shown(), ['ir_usd', 'coin_emami']);
+    });
+
+    test('the user selection and order drive what is published', () async {
+      await HomeWidgetService.saveSelection(store, ['coin_emami', 'ir_usd']);
+      await HomeWidgetService.publish(store, all);
+      expect(shown(), ['coin_emami', 'ir_usd']);
     });
 
     test('an unchanged payload is not rewritten', () async {
       await HomeWidgetService.publish(store, all);
-      final calls = sink.saveCalls;
-      expect(sink.redraws, 1);
+      final calls = data.saves;
+      expect(data.redraws, 1);
 
       await HomeWidgetService.publish(store, all);
-      expect(sink.saveCalls, calls);
-      expect(sink.redraws, 1);
+      expect(data.saves, calls);
+      expect(data.redraws, 1);
 
       await HomeWidgetService.publish(store, {
         ...all,
         'ir_usd': _q('ir_usd', price: 215000),
       });
-      expect(sink.redraws, 2);
+      expect(data.redraws, 2);
     });
 
     test('a failed write is retried next time, not remembered', () async {
-      sink.fail = true;
+      data.fail = true;
       await HomeWidgetService.publish(store, all);
-      expect(sink.redraws, 0);
+      expect(data.redraws, 0);
 
-      sink.fail = false;
+      data.fail = false;
       await HomeWidgetService.publish(store, all);
-      expect(sink.redraws, 1);
+      expect(data.redraws, 1);
     });
 
     test('nothing usable writes nothing at all', () async {
       await HomeWidgetService.publish(store, const {});
-      expect(sink.saveCalls, 0);
-      expect(sink.redraws, 0);
+      expect(data.saves, 0);
+      expect(data.redraws, 0);
+    });
+
+    test('disabled writes nothing', () async {
+      await HomeWidgetService.setEnabled(store, false);
+      data.saves = 0;
+      await HomeWidgetService.publish(store, all);
+      expect(data.redraws, 0);
+      expect(data.saves, 0);
+    });
+
+    test('live mode raises the «زنده» flag', () async {
+      await HomeWidgetService.saveMode(store, WidgetRefreshMode.live);
+      await HomeWidgetService.publish(store, all);
+      expect(data.values['w_live'], '1');
+    });
+
+    test('the series persists so sparklines survive restarts', () async {
+      await HomeWidgetService.publish(store, all);
+      expect(data.values[HomeWidgetService.seriesKey], contains('ir_usd'));
     });
   });
 }

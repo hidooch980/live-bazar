@@ -3,4 +3,7 @@
     <!-- Update APKs are downloaded into the app cache dir. -->
     <cache-path name="updates" path="molido_update/"/>
     <files-path name="updates_files" path="molido_update/"/>
+    <!-- Backup export and the share-price card (both written to cache). -->
+    <cache-path name="backups" path="backups/"/>
+    <cache-path name="share" path="share/"/>
 </paths>

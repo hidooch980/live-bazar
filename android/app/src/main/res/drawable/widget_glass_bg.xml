@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted glass, approximated: RemoteViews cannot blur, so a dark tint
+     keeps text legible on any wallpaper, a translucent white gradient gives
+     the glass sheen, and a hairline stroke draws the edge. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp"/>
+            <solid android:color="#47101828"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp"/>
+            <gradient android:angle="135" android:startColor="#4DFFFFFF"
+                android:centerColor="#26FFFFFF" android:endColor="#14FFFFFF"/>
+            <stroke android:width="1dp" android:color="#59FFFFFF"/>
+        </shape>
+    </item>
+</layer-list>

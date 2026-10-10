@@ -11,7 +11,9 @@ import '../providers/adapters/global_currency_provider.dart';
 import '../providers/adapters/iranian_market_provider.dart';
 import '../providers/iprice_provider.dart';
 import 'alert_service.dart';
+import 'daily_summary_service.dart';
 import 'home_widget_service.dart';
+import 'widget/widget_refresh.dart';
 import 'notification_service.dart';
 import 'timezone_service.dart';
 
@@ -89,6 +91,21 @@ abstract final class BackgroundAlertWorker {
 @pragma('vm:entry-point')
 void backgroundAlertDispatcher() {
   Workmanager().executeTask((task, _) async {
+    if (task == DailySummaryService.taskName) {
+      try {
+        await DailySummaryService.run(store: await HiveKeyValueStore.open());
+      } catch (e) {
+        debugPrint('[daily] $e');
+      }
+      // Chain tomorrow's run after this one ('update' appends behind the
+      // running work instead of cancelling it).
+      try {
+        await DailySummaryService.schedule(policy: ExistingWorkPolicy.update);
+      } catch (e) {
+        debugPrint('[daily] reschedule: $e');
+      }
+      return true;
+    }
     if (task != BackgroundAlertWorker.taskName) return true;
     try {
       await runBackgroundAlertCheck();
@@ -125,12 +142,26 @@ Future<int> runBackgroundAlertCheck({
 
   // The widget needs refreshing even with no alert rules — that is the
   // whole point of a widget.
-  final widgetOn = await HomeWidgetService.isEnabled(localStore);
+  // The widget's config is read from its own mirror (what every
+  // background path uses); a first run after upgrading has no mirror yet,
+  // so seed it from Hive, which this worker already has open.
+  WidgetConfig widget;
+  try {
+    if (await HomeWidgetService.data.read(HomeWidgetService.cfgEnabledKey) ==
+        null) {
+      await HomeWidgetService.mirrorConfig(localStore);
+    }
+    widget = await HomeWidgetService.readMirroredConfig();
+  } catch (_) {
+    widget = WidgetConfig.disabled; // no widget host: alerts still run
+  }
+  final widgetOn = widget.enabled;
   if (active.isEmpty && !widgetOn) return 0;
 
   final wanted = {
     ...active.map((r) => r.assetId),
-    if (widgetOn) ...HomeWidgetService.assets.keys,
+    if (widgetOn) ...widget.ids,
+    if (widgetOn) ...HomeWidgetService.rateDependencies(widget.ids),
   };
 
   await MarketHttp.instance.load(localStore);
@@ -154,7 +185,7 @@ Future<int> runBackgroundAlertCheck({
   }
   if (quotes.isEmpty) return 0;
 
-  if (widgetOn) await HomeWidgetService.publish(localStore, fullQuotes);
+  if (widgetOn) await WidgetRefresher.publishFetched(widget, fullQuotes);
   if (active.isEmpty) return 0;
 
   final fired = await alerts.evaluate(quotes: quotes);

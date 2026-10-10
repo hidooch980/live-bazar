@@ -4,9 +4,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <!-- GitHub-only in-app updates: install downloaded release APK. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- Opt-in «زنده» widget mode: a dataSync foreground service with a
+         persistent notification (Android 14+ requires the typed permission). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="بازار مولیدو"
-        android:name="${applicationName}"
+        android:name=".MolidoApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -36,11 +41,24 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Home screen widget. Values are written by the Dart side and
-             refreshed by the same background worker as price alerts;
-             updatePeriodMillis is Android's own fallback refresh. -->
+        <!-- Home screen widget, three sizes rendering one payload written by
+             the Dart side. updatePeriodMillis is Android's own fallback redraw;
+             fresh data comes from the app, the 15-minute worker, the screen-on
+             refresh, or the opt-in live service. -->
+        <receiver
+            android:name=".MolidoWidgetSmallProvider"
+            android:label="مولیدو — کوچک"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/molido_widget_small_info"/>
+        </receiver>
         <receiver
             android:name=".MolidoWidgetProvider"
+            android:label="مولیدو — متوسط"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -49,6 +67,32 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/molido_widget_info"/>
         </receiver>
+        <receiver
+            android:name=".MolidoWidgetLargeProvider"
+            android:label="مولیدو — بزرگ"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/molido_widget_large_info"/>
+        </receiver>
+
+        <!-- Runs Dart (widgetBackgroundCallback) for the screen-on refresh and
+             the live service's ticks. Only our own PendingIntents reach it. -->
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".WidgetLiveService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
 
         <!-- FileProvider: shares the downloaded update APK with the installer. -->
         <provider

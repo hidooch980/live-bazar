@@ -186,8 +186,9 @@ void main() {
       await tester.pump();
       market.replace({'ir_usd': _usd, 'ir_eur': _eur}); // gold disappears
       await tester.pump();
-      // «از» must fall back to something other than «به» (ir_usd).
-      expect(find.text('یورو (بازار آزاد) (EUR/IRR-FM)'), findsOneWidget);
+      // «از» must fall back to something other than «به» (ir_usd): the
+      // first option, now the plain Toman entry.
+      expect(find.text('تومان (IRT)'), findsOneWidget);
       expect(
         find.text('دلار آمریکا (بازار آزاد) (USD/IRR-FM)'),
         findsOneWidget,

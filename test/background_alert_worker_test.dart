@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:live_bazar/config/asset_catalog.dart';
 import 'package:live_bazar/core/errors/app_exception.dart';
 import 'package:live_bazar/data/cache/local_state_store.dart';
 import 'package:live_bazar/domain/entities/alert_rule.dart';
@@ -8,6 +9,7 @@ import 'package:live_bazar/services/alert_service.dart';
 import 'package:live_bazar/services/background_alert_worker.dart';
 import 'package:live_bazar/services/home_widget_service.dart';
 import 'package:live_bazar/services/notification_service.dart';
+import 'package:live_bazar/services/widget/widget_refresh.dart';
 
 /// Records what would have been shown, without touching the platform.
 class _RecordingNotifier implements NotificationService {
@@ -28,16 +30,6 @@ class _RecordingNotifier implements NotificationService {
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _RecordingSink implements HomeWidgetSink {
-  final saves = <String, String?>{};
-
-  @override
-  Future<void> save(String key, String? value) async => saves[key] = value;
-
-  @override
-  Future<void> redraw() async {}
 }
 
 class _StubProvider implements IPriceProvider {
@@ -81,13 +73,15 @@ class _StubProvider implements IPriceProvider {
           if (assetIds.contains(e.key))
             PriceQuote(
               id: e.key,
-              symbol: e.key,
+              symbol: AssetCatalog.byId(e.key)?.symbol ?? e.key,
               name: e.key,
-              nameFa: e.key,
-              category: AssetCategory.iranianCurrency,
+              nameFa: AssetCatalog.byId(e.key)?.nameFa ?? e.key,
+              category:
+                  AssetCatalog.byId(e.key)?.category ??
+                  AssetCategory.iranianCurrency,
               price: e.value,
-              unit: 'تومان',
-              currency: 'IRR',
+              unit: AssetCatalog.byId(e.key)?.unit ?? 'تومان',
+              currency: AssetCatalog.byId(e.key)?.currency ?? 'IRR',
               timestamp: DateTime.utc(2026, 9, 1),
               source: 'stub',
               status: QuoteStatus.live,
@@ -233,12 +227,13 @@ void main() {
   });
 
   group('the widget no longer depends on the alerts switch', () {
-    late _RecordingSink sink;
+    late MemoryWidgetDataStore sink;
 
     setUp(() {
       HomeWidgetService.resetForTest();
-      sink = _RecordingSink();
-      HomeWidgetService.sink = sink;
+      WidgetRefresher.resetForTest();
+      sink = MemoryWidgetDataStore();
+      HomeWidgetService.data = sink;
     });
 
     tearDown(HomeWidgetService.resetForTest);
@@ -277,8 +272,8 @@ void main() {
       expect(count, 0);
       expect(ir.lastRequested, {'ir_usd', 'gold_18k', 'coin_emami'});
       expect(crypto.lastRequested, isNull, reason: 'not a widget asset');
-      expect(sink.saves['w_usd'], '۲۱۴,۰۰۰ تومان');
-      expect(sink.saves['w_updated'], startsWith('به‌روزرسانی'));
+      expect(sink.values['w_rows'], contains('"v":"۲۱۴,۰۰۰"'));
+      expect(sink.values['w_updated'], startsWith('به‌روزرسانی'));
     });
 
     test('rules are not evaluated when only the widget is on', () async {
@@ -302,7 +297,51 @@ void main() {
 
       expect(count, 0);
       expect(notifier.fired, isEmpty);
-      expect(sink.saves['w_gold'], '۲۲,۱۹۵,۸۰۰ تومان');
+      expect(sink.values['w_rows'], contains('"v":"۲۲,۱۹۵,۸۰۰"'));
+    });
+
+    test('fetches the user selection plus the rate it needs', () async {
+      final store = InMemoryKeyValueStore();
+      await HomeWidgetService.setEnabled(store, true);
+      await HomeWidgetService.saveSelection(store, ['btc_usd', 'coin_emami']);
+      final ir = _StubProvider(
+        'ir',
+        {'ir_usd', 'usdt_irt', 'gold_18k', 'coin_emami'},
+        {'ir_usd': 100000, 'usdt_irt': 101000, 'coin_emami': 221505000},
+      );
+      final crypto = _StubProvider('crypto', {'btc_usd'}, {'btc_usd': 60000});
+
+      await runBackgroundAlertCheck(
+        store: store,
+        notifications: _RecordingNotifier(),
+        providers: [ir, crypto],
+      );
+
+      expect(ir.lastRequested, {'ir_usd', 'usdt_irt', 'coin_emami'});
+      expect(crypto.lastRequested, {'btc_usd'});
+      final rows = sink.values['w_rows']!;
+      // Bitcoin first, as chosen, converted at the real free-market rate.
+      expect(rows.indexOf('btc_usd'), lessThan(rows.indexOf('coin_emami')));
+      expect(rows, contains('"v":"۶,۰۰۰,۰۰۰,۰۰۰"'));
+      expect(rows, isNot(contains('"id":"ir_usd"')), reason: 'rate only');
+    });
+
+    test('a first run after upgrading seeds the mirror from Hive', () async {
+      final store = InMemoryKeyValueStore();
+      await store.setString(HomeWidgetService.enabledKey, '1');
+      expect(sink.values, isEmpty);
+      final ir = _StubProvider(
+        'ir',
+        {'ir_usd', 'gold_18k', 'coin_emami'},
+        {'ir_usd': 214000, 'gold_18k': 22195800, 'coin_emami': 221505000},
+      );
+      await runBackgroundAlertCheck(
+        store: store,
+        notifications: _RecordingNotifier(),
+        providers: [ir],
+      );
+      expect(sink.values['cfg_enabled'], '1');
+      expect(sink.values['w_rows'], isNotNull);
     });
   });
 }

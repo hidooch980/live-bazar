@@ -1,23 +1,22 @@
 package com.molido.live_bazar
 
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
-import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetLaunchIntent
-import es.antonborri.home_widget.HomeWidgetProvider
 import android.content.SharedPreferences
+import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Home screen widget: the prices, without opening the app.
+ * Home screen widget, three sizes, one payload.
  *
  * Values are written by the Dart side (HomeWidgetService) into the shared
- * preferences home_widget owns, and refreshed by the same background
- * worker that evaluates price alerts. The widget renders whatever was
- * last written and always shows its own timestamp, so a stale widget
- * announces that it is stale instead of pretending to be live.
+ * preferences home_widget owns. The widget renders whatever was last
+ * written and always shows its own timestamp, so a stale widget announces
+ * that it is stale instead of pretending to be live.
  */
-class MolidoWidgetProvider : HomeWidgetProvider() {
+abstract class MolidoBaseWidgetProvider : HomeWidgetProvider() {
+    abstract fun build(context: Context, data: SharedPreferences): RemoteViews
 
     override fun onUpdate(
         context: Context,
@@ -26,30 +25,47 @@ class MolidoWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         appWidgetIds.forEach { widgetId ->
-            val views = RemoteViews(context.packageName, R.layout.molido_widget).apply {
-                setTextViewText(
-                    R.id.widget_usd_value,
-                    widgetData.getString("w_usd", null) ?: "—",
-                )
-                setTextViewText(
-                    R.id.widget_gold_value,
-                    widgetData.getString("w_gold", null) ?: "—",
-                )
-                setTextViewText(
-                    R.id.widget_coin_value,
-                    widgetData.getString("w_coin", null) ?: "—",
-                )
-                setTextViewText(
-                    R.id.widget_updated,
-                    widgetData.getString("w_updated", null) ?: "بدون داده",
-                )
-                // Tapping anywhere opens the app.
-                setOnClickPendingIntent(
-                    R.id.widget_root,
-                    HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java),
-                )
-            }
-            appWidgetManager.updateAppWidget(widgetId, views)
+            appWidgetManager.updateAppWidget(widgetId, build(context, widgetData))
+        }
+    }
+
+    /** The last widget of this size was removed. */
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        if (!MolidoWidgets.anyInstalled(context)) WidgetLiveService.stop(context)
+    }
+}
+
+/** Medium (4×2): the first three assets. Keeps the 0.4.0 class name so
+ *  widgets users already placed survive the upgrade. */
+class MolidoWidgetProvider : MolidoBaseWidgetProvider() {
+    override fun build(context: Context, data: SharedPreferences) =
+        MolidoWidgetRenderer.medium(context, data)
+}
+
+/** Small (2×2): the first asset. */
+class MolidoWidgetSmallProvider : MolidoBaseWidgetProvider() {
+    override fun build(context: Context, data: SharedPreferences) =
+        MolidoWidgetRenderer.small(context, data)
+}
+
+/** Large (4×4): up to six assets with sparklines. */
+class MolidoWidgetLargeProvider : MolidoBaseWidgetProvider() {
+    override fun build(context: Context, data: SharedPreferences) =
+        MolidoWidgetRenderer.large(context, data)
+}
+
+object MolidoWidgets {
+    private val providers = listOf(
+        MolidoWidgetSmallProvider::class.java,
+        MolidoWidgetProvider::class.java,
+        MolidoWidgetLargeProvider::class.java,
+    )
+
+    fun anyInstalled(context: Context): Boolean {
+        val mgr = AppWidgetManager.getInstance(context)
+        return providers.any {
+            mgr.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
         }
     }
 }

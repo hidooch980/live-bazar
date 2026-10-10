@@ -6,12 +6,15 @@ import '../../core/network/http_config.dart';
 import '../../core/utils/fa_number.dart';
 import '../../services/background_alert_worker.dart';
 import '../../services/backup_service.dart';
+import '../../services/daily_summary_service.dart';
 import '../../services/home_widget_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
 import '../home/customize_home_screen.dart';
 import '../home/home_layout.dart';
 import '../update/update_flow.dart';
+import '../widget_settings/home_widget_config_controller.dart';
+import '../widget_settings/home_widget_settings_screen.dart';
 
 /// SETTINGS (§28, §34): privacy-first, local-only.
 class SettingsScreen extends ConsumerWidget {
@@ -94,6 +97,7 @@ class SettingsScreen extends ConsumerWidget {
           const _BackgroundAlertsTile(),
           const _Header('ویجت صفحه اصلی'),
           const _HomeWidgetTile(),
+          const _DailySummaryTile(),
           const _Header('پشتیبان‌گیری (کاملاً محلی)'),
           ListTile(
             leading: const Icon(Icons.ios_share),
@@ -134,67 +138,71 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 /// Opt-in switch for publishing prices to the home screen widget.
-class _HomeWidgetTile extends ConsumerStatefulWidget {
+/// Entry to «ویجت صفحه اصلی» with a one-line summary of its state.
+class _HomeWidgetTile extends ConsumerWidget {
   const _HomeWidgetTile();
 
   @override
-  ConsumerState<_HomeWidgetTile> createState() => _HomeWidgetTileState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = ref.watch(homeWidgetConfigProvider);
+    final summary = c == null
+        ? '...'
+        : !c.enabled
+        ? 'خاموش'
+        : '${c.ids.length.faDigits} دارایی · '
+              '${c.mode == WidgetRefreshMode.live ? 'زنده' : 'کم‌مصرف'}';
+    return ListTile(
+      leading: const Icon(Icons.widgets_outlined),
+      title: const Text('ویجت صفحه اصلی'),
+      subtitle: Text('دارایی‌ها، ترتیب و نحوه به‌روزرسانی — $summary'),
+      trailing: const Icon(Icons.chevron_left),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const HomeWidgetSettingsScreen()),
+      ),
+    );
+  }
 }
 
-class _HomeWidgetTileState extends ConsumerState<_HomeWidgetTile> {
+/// Opt-in end-of-day summary notification (default off).
+class _DailySummaryTile extends ConsumerStatefulWidget {
+  const _DailySummaryTile();
+
+  @override
+  ConsumerState<_DailySummaryTile> createState() => _DailySummaryTileState();
+}
+
+class _DailySummaryTileState extends ConsumerState<_DailySummaryTile> {
   bool? _on;
 
   @override
   void initState() {
     super.initState();
-    HomeWidgetService.isEnabled(ref.read(localStoreProvider)).then((v) {
+    DailySummaryService.isEnabled(ref.read(localStoreProvider)).then((v) {
       if (mounted) setState(() => _on = v);
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SwitchListTile(
-          secondary: const Icon(Icons.widgets_outlined),
-          title: const Text('نمایش قیمت‌ها در ویجت'),
-          subtitle: const Text(
-            'دلار، طلای ۱۸ و سکه امامی روی صفحه اصلی گوشی. ویجت را از فشار طولانی روی صفحه اصلی اضافه کن.',
-          ),
-          value: _on ?? false,
-          onChanged: _on == null
-              ? null
-              : (v) async {
-                  setState(() => _on = v);
-                  final store = ref.read(localStoreProvider);
-                  await HomeWidgetService.setEnabled(store, v);
-                  // The widget has its own claim on the 15-minute task;
-                  // it no longer rides on the background-alerts switch.
-                  await BackgroundAlertWorker.restore(store);
-                  if (v) {
-                    final snap = ref.read(marketControllerProvider).snapshot;
-                    if (snap != null) {
-                      await HomeWidgetService.publish(
-                        ref.read(localStoreProvider),
-                        snap.quotes,
-                      );
-                    }
-                  }
-                },
-        ),
-        if (_on == true)
-          const ListTile(
-            dense: true,
-            leading: Icon(Icons.info_outline, size: 18),
-            title: Text(
-              'با بسته بودن اپ، ویجت حدوداً هر ۱۵ دقیقه در پس‌زمینه به‌روز می‌شود؛ ساعت پایین ویجت زمان قدیمی‌ترین قیمتِ نمایش‌داده‌شده است.',
-              style: TextStyle(fontSize: 11),
-            ),
-          ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => SwitchListTile(
+    key: const ValueKey('daily-summary'),
+    secondary: const Icon(Icons.summarize_outlined),
+    title: const Text('خلاصه روزانه بازار'),
+    subtitle: const Text(
+      'حدود ساعت ۲۰:۰۵ تهران، تغییر واقعی امروز دلار، طلای ۱۸ و سکه امامی. '
+      'اگر بازار امروز قیمتی منتشر نکرده باشد، اعلانی ارسال نمی‌شود.',
+    ),
+    value: _on ?? false,
+    onChanged: _on == null
+        ? null
+        : (v) async {
+            setState(() => _on = v);
+            if (v) await ref.read(notificationsProvider).init();
+            await DailySummaryService.setEnabled(
+              ref.read(localStoreProvider),
+              v,
+            );
+          },
+  );
 }
 
 /// Opt-in switch for the 15-minute background alert check.
@@ -310,6 +318,8 @@ class _ProxySectionState extends ConsumerState<_ProxySection> {
       port: int.tryParse(_port.text.trim()) ?? 0,
     );
     await MarketHttp.instance.save(ref.read(localStoreProvider), config);
+    // Background widget refreshes read the proxy from the widget's mirror.
+    await HomeWidgetService.mirrorConfig(ref.read(localStoreProvider));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
