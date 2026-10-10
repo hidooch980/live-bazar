@@ -167,10 +167,11 @@ class _HomeWidgetTileState extends ConsumerState<_HomeWidgetTile> {
               ? null
               : (v) async {
                   setState(() => _on = v);
-                  await HomeWidgetService.setEnabled(
-                    ref.read(localStoreProvider),
-                    v,
-                  );
+                  final store = ref.read(localStoreProvider);
+                  await HomeWidgetService.setEnabled(store, v);
+                  // The widget has its own claim on the 15-minute task;
+                  // it no longer rides on the background-alerts switch.
+                  await BackgroundAlertWorker.restore(store);
                   if (v) {
                     final snap = ref.read(marketControllerProvider).snapshot;
                     if (snap != null) {
@@ -187,7 +188,7 @@ class _HomeWidgetTileState extends ConsumerState<_HomeWidgetTile> {
             dense: true,
             leading: Icon(Icons.info_outline, size: 18),
             title: Text(
-              'برای به‌روز ماندن ویجت با بسته بودن اپ، «بررسی هشدارها در پس‌زمینه» را هم روشن کن.',
+              'با بسته بودن اپ، ویجت حدوداً هر ۱۵ دقیقه در پس‌زمینه به‌روز می‌شود؛ ساعت پایین ویجت زمان قدیمی‌ترین قیمتِ نمایش‌داده‌شده است.',
               style: TextStyle(fontSize: 11),
             ),
           ),

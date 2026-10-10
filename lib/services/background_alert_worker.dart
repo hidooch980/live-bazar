@@ -57,10 +57,14 @@ abstract final class BackgroundAlertWorker {
     await Workmanager().cancelByUniqueName(uniqueName);
   }
 
-  /// Applies the stored preference at startup so a reinstall or an OS
-  /// cleanup cannot silently leave alerts unscheduled.
+  /// Applies the stored preferences at startup so a reinstall or an OS
+  /// cleanup cannot silently leave the task unscheduled.
+  ///
+  /// The task serves two opt-ins: price alerts AND the home screen widget.
+  /// Either one keeps it scheduled; only both off cancels it, so turning
+  /// alerts off no longer freezes the widget.
   static Future<bool> restore(KeyValueStore store) async {
-    final on = (await store.getString(enabledKey)) == '1';
+    final on = await isNeeded(store);
     if (on) {
       await enable();
     } else {
@@ -69,13 +73,15 @@ abstract final class BackgroundAlertWorker {
     return on;
   }
 
+  /// Whether anything the user switched on needs the periodic wake-up.
+  static Future<bool> isNeeded(KeyValueStore store) async =>
+      (await store.getString(enabledKey)) == '1' ||
+      await HomeWidgetService.isEnabled(store);
+
+  /// Persists the alert opt-in and reschedules for both opt-ins.
   static Future<void> setEnabled(KeyValueStore store, bool value) async {
     await store.setString(enabledKey, value ? '1' : '0');
-    if (value) {
-      await enable();
-    } else {
-      await disable();
-    }
+    await restore(store);
   }
 }
 
@@ -107,9 +113,15 @@ Future<int> runBackgroundAlertCheck({
 }) async {
   final localStore = store ?? await HiveKeyValueStore.open();
 
+  // The task also runs for the widget alone, so background alerts are
+  // evaluated only when the user actually switched them on.
+  final alertsOn =
+      (await localStore.getString(BackgroundAlertWorker.enabledKey)) == '1';
   final alerts = AlertService(localStore);
   await alerts.load();
-  final active = alerts.rules.where((r) => r.isActive).toList();
+  final active = alertsOn
+      ? alerts.rules.where((r) => r.isActive).toList()
+      : const <AlertRule>[];
 
   // The widget needs refreshing even with no alert rules — that is the
   // whole point of a widget.

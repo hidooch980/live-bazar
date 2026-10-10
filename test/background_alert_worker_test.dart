@@ -6,6 +6,7 @@ import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/providers/iprice_provider.dart';
 import 'package:live_bazar/services/alert_service.dart';
 import 'package:live_bazar/services/background_alert_worker.dart';
+import 'package:live_bazar/services/home_widget_service.dart';
 import 'package:live_bazar/services/notification_service.dart';
 
 /// Records what would have been shown, without touching the platform.
@@ -27,6 +28,16 @@ class _RecordingNotifier implements NotificationService {
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _RecordingSink implements HomeWidgetSink {
+  final saves = <String, String?>{};
+
+  @override
+  Future<void> save(String key, String? value) async => saves[key] = value;
+
+  @override
+  Future<void> redraw() async {}
 }
 
 class _StubProvider implements IPriceProvider {
@@ -92,6 +103,8 @@ Future<AlertService> _withRule(
   AlertType type,
   double threshold,
 ) async {
+  // Rules are only evaluated in the background once the user opted in.
+  await store.setString(BackgroundAlertWorker.enabledKey, '1');
   final alerts = AlertService(store);
   await alerts.load();
   await alerts.create(assetId: assetId, type: type, threshold: threshold);
@@ -217,5 +230,79 @@ void main() {
     // Android's floor for periodic work; anything smaller is silently
     // raised by the platform, so claiming faster would be a lie.
     expect(BackgroundAlertWorker.interval, const Duration(minutes: 15));
+  });
+
+  group('the widget no longer depends on the alerts switch', () {
+    late _RecordingSink sink;
+
+    setUp(() {
+      HomeWidgetService.resetForTest();
+      sink = _RecordingSink();
+      HomeWidgetService.sink = sink;
+    });
+
+    tearDown(HomeWidgetService.resetForTest);
+
+    test('either opt-in keeps the periodic task scheduled', () async {
+      final store = InMemoryKeyValueStore();
+      expect(await BackgroundAlertWorker.isNeeded(store), isFalse);
+
+      await HomeWidgetService.setEnabled(store, true);
+      expect(await BackgroundAlertWorker.isNeeded(store), isTrue);
+
+      await HomeWidgetService.setEnabled(store, false);
+      await store.setString(BackgroundAlertWorker.enabledKey, '1');
+      expect(await BackgroundAlertWorker.isNeeded(store), isTrue);
+
+      await store.setString(BackgroundAlertWorker.enabledKey, '0');
+      expect(await BackgroundAlertWorker.isNeeded(store), isFalse);
+    });
+
+    test('widget alone: fetches only widget assets and publishes', () async {
+      final store = InMemoryKeyValueStore();
+      await HomeWidgetService.setEnabled(store, true);
+      final ir = _StubProvider(
+        'ir',
+        {'ir_usd', 'gold_18k', 'coin_emami', 'ir_eur'},
+        {'ir_usd': 214000, 'gold_18k': 22195800, 'coin_emami': 221505000},
+      );
+      final crypto = _StubProvider('crypto', {'btc_usd'}, {'btc_usd': 60000});
+
+      final count = await runBackgroundAlertCheck(
+        store: store,
+        notifications: _RecordingNotifier(),
+        providers: [ir, crypto],
+      );
+
+      expect(count, 0);
+      expect(ir.lastRequested, {'ir_usd', 'gold_18k', 'coin_emami'});
+      expect(crypto.lastRequested, isNull, reason: 'not a widget asset');
+      expect(sink.saves['w_usd'], '۲۱۴,۰۰۰ تومان');
+      expect(sink.saves['w_updated'], startsWith('به‌روزرسانی'));
+    });
+
+    test('rules are not evaluated when only the widget is on', () async {
+      final store = InMemoryKeyValueStore();
+      await _withRule(store, 'gold_18k', AlertType.priceAbove, 1);
+      // The user turned background alerts back off; the widget stays on.
+      await store.setString(BackgroundAlertWorker.enabledKey, '0');
+      await HomeWidgetService.setEnabled(store, true);
+      final notifier = _RecordingNotifier();
+      final ir = _StubProvider(
+        'ir',
+        {'ir_usd', 'gold_18k', 'coin_emami'},
+        {'ir_usd': 214000, 'gold_18k': 22195800, 'coin_emami': 221505000},
+      );
+
+      final count = await runBackgroundAlertCheck(
+        store: store,
+        notifications: notifier,
+        providers: [ir],
+      );
+
+      expect(count, 0);
+      expect(notifier.fired, isEmpty);
+      expect(sink.saves['w_gold'], '۲۲,۱۹۵,۸۰۰ تومان');
+    });
   });
 }
