@@ -7,9 +7,12 @@ on:
 
 jobs:
   outdated:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to 26.04 from 2026-10-19. 24.04 is the
+    # image every release so far was built and signed on; move deliberately
+    # after a green run on ubuntu-26.04 (Flutter CI → Run workflow).
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: subosito/flutter-action@v2
         with:

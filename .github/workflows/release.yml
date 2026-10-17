@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v*'
+  # Manual runs are DRY RUNS: the full signed build and checks, with the
+  # APK kept as a short-lived workflow artifact (even when started from a
+  # tag ref). Only a pushed v* tag creates or updates a GitHub release.
   workflow_dispatch:
 
 # GITHUB_TOKEN needs write access to create releases & upload artifacts.
@@ -12,11 +15,14 @@ permissions:
 
 jobs:
   build-release:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moves to 26.04 from 2026-10-19. 24.04 is the
+    # image every release so far was built and signed on; move deliberately
+    # after a green run on ubuntu-26.04 (Flutter CI → Run workflow).
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -69,10 +75,21 @@ jobs:
           "$APKSIGNER" verify --print-certs --verbose "$APK"
 
       - name: Rename artifact
-        run: mv build/app/outputs/flutter-apk/app-release.apk molido-market-${{ github.ref_name }}.apk
+        env:
+          NAME: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('dryrun-{0}', github.sha) }}
+        run: mv build/app/outputs/flutter-apk/app-release.apk "molido-market-$NAME.apk"
+
+      - name: Keep dry-run APK as a workflow artifact
+        if: ${{ !(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-apk-dryrun
+          path: molido-market-*.apk
+          retention-days: 3
 
       - name: Upload to release
-        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
         with:
           files: molido-market-*.apk
           generate_release_notes: true
