@@ -6,6 +6,9 @@ versioning follows [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- به‌روزرسانی افزونه‌ها: `home_widget` از 0.9.3 به 0.10.0 و `workmanager` از 0.10.9 به 0.10.10 (`workmanager_android` 0.10.9). رفتار برنامه تغییری نکرده است؛ نسخه‌ی جدید `workmanager_android` مشکل کندی راه‌اندازی کار پس‌زمینه در اندروید ۱۶ را برطرف می‌کند.
+
 ## [0.7.0] — 2026-10-10
 
 ### Added

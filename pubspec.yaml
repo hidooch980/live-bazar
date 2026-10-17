@@ -47,8 +47,8 @@ dependencies:
   timezone: ^0.11.1
   package_info_plus: ^10.2.1
   path_provider: ^2.1.6
-  workmanager: ^0.10.9
-  home_widget: ^0.9.3
+  workmanager: ^0.10.10
+  home_widget: ^0.10.0
 
 dev_dependencies:
   flutter_test:
