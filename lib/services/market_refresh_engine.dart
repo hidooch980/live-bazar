@@ -145,6 +145,9 @@ class MarketRefreshEngine {
                 '[engine] provider ${provider.id} failed: ${result.error!.message}',
               );
             } else {
+              // Empty success is still a missed refresh. Do not leave cached
+              // quotes from this provider falsely marked LIVE.
+              failedProviders.add(provider);
               sourceStatus[provider.id] = 'empty';
               providerStatus[provider.id] = 'empty';
             }
@@ -223,7 +226,13 @@ class MarketRefreshEngine {
         // The provider may already know this is a previous session's close
         // — its timestamp is a midnight date stamp, so any age derived
         // from it is fiction. Keep that verdict.
-        if (incoming.status == QuoteStatus.previousClose) return q;
+        if (incoming.status == QuoteStatus.previousClose ||
+            incoming.status == QuoteStatus.stale ||
+            incoming.status == QuoteStatus.dataConflict ||
+            incoming.status == QuoteStatus.unavailable ||
+            incoming.status == QuoteStatus.error) {
+          return q;
+        }
         // Otherwise: this quote WAS just fetched successfully, so it is the
         // newest the source offers. If the source's own publish time is
         // old, the market is closed or the asset is thinly traded — that is
