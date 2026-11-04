@@ -68,6 +68,15 @@ void main() {
       expect(svc.validate(_q('fx_eur', -2)).isValid, isFalse);
     });
 
+    test('rejects non-finite change metrics and invalid confidence', () {
+      expect(
+        svc.validate(_q('fx_eur', 1.08, changePercent: double.nan)).isValid,
+        isFalse,
+      );
+      final invalidConfidence = _q('fx_eur', 1.08).copyWith(confidence: 1.5);
+      expect(svc.validate(invalidConfidence).isValid, isFalse);
+    });
+
     test('rejects unknown asset ids', () {
       expect(svc.validate(_q('nope', 1)).isValid, isFalse);
     });
