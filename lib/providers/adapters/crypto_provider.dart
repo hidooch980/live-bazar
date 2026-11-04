@@ -142,7 +142,8 @@ class CryptoProvider implements IPriceProvider {
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
         final price = (m['price'] as num?)?.toDouble() ?? 0;
-        if (!price.isFinite || price <= 0) continue;
+        final ts = _sourceTimestamp(m['last_updated']);
+        if (!price.isFinite || price <= 0 || ts == null) continue;
         final pct = ((m['percent_change_24h'] as num?) ?? 0).toDouble();
         quotes.add(
           _quote(
@@ -191,8 +192,7 @@ class CryptoProvider implements IPriceProvider {
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
         final price = double.tryParse('${m['price_usd']}') ?? 0;
-        final ts = _sourceTimestamp(m['last_updated']);
-        if (!price.isFinite || price <= 0 || ts == null) continue;
+        if (!price.isFinite || price <= 0) continue;
         final pct = double.tryParse('${m['percent_change_24h']}') ?? 0;
         quotes.add(
           _quote(
