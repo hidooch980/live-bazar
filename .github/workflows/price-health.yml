@@ -51,12 +51,16 @@ jobs:
         if: success()
         run: |
           python3 - <<'PY'
-          import json, datetime, pathlib, sys
+          import json, datetime, pathlib, sys, math
           sys.path.insert(0, 'scripts')
           from snapshot_freshness import quote_status
 
           cg = json.load(open('/tmp/cg.json', encoding='utf-8'))
           fx = json.load(open('/tmp/fx.json', encoding='utf-8'))
+          if not isinstance(cg, dict) or cg.get('error'):
+              raise SystemExit('CoinGecko returned an invalid payload')
+          if not isinstance(fx, dict) or not isinstance(fx.get('rates'), dict):
+              raise SystemExit('ExchangeRate-API returned an invalid payload')
           now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
           quotes = {}
 
@@ -72,7 +76,7 @@ jobs:
                   if not isinstance(observed, (int, float)) or observed <= 0:
                       print(f'skip {aid}: CoinGecko timestamp missing')
                       continue
-                  if not isinstance(price, (int, float)) or price <= 0:
+                  if isinstance(price, bool) or not isinstance(price, (int, float)) or not math.isfinite(price) or price <= 0:
                       print(f'skip {aid}: invalid price')
                       continue
                   ts_cg = datetime.datetime.fromtimestamp(observed, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -99,12 +103,13 @@ jobs:
               fx_updated, datetime.timezone.utc
           ).strftime('%Y-%m-%dT%H:%M:%SZ')
           for code in ['EUR','GBP','AED','TRY','CNY','CAD','AUD','CHF','JPY']:
-              if code in rates and rates[code]:
+              rate = rates.get(code)
+              if not isinstance(rate, bool) and isinstance(rate, (int, float)) and math.isfinite(rate) and rate > 0:
                   aid = f'fx_{code.lower()}'
                   quotes[aid] = {
                       'id': aid, 'symbol': code,
                       'category': 'currency',
-                      'price': round(1.0 / rates[code], 8),
+                      'price': round(1.0 / rate, 8),
                       'unit': '', 'currency': code,
                       'timestamp': ts, 'source': 'ExchangeRate-API',
                       'status': quote_status(ts), 'confidence': 1.0,
@@ -149,7 +154,10 @@ jobs:
           tehran = datetime.timezone(datetime.timedelta(hours=3, minutes=30))
           try:
               with open('/tmp/ir.json', encoding='utf-8') as fh:
-                  ir = json.load(fh).get('current', {})
+                  ir_payload = json.load(fh)
+              ir = ir_payload.get('current', {}) if isinstance(ir_payload, dict) else {}
+              if not isinstance(ir, dict):
+                  ir = {}
           except Exception as e:
               ir = {}
               print(f'tgju unavailable: {e}')
@@ -161,7 +169,7 @@ jobs:
                   raw = float(str(row.get('p', '')).replace(',', ''))
               except ValueError:
                   continue
-              if raw <= 0:
+              if not math.isfinite(raw) or raw <= 0:
                   continue
               aid, sym, name, name_fa, cat, unit, cur = meta
               div = 10.0 if cur == 'IRR' else 1.0
