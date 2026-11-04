@@ -20,6 +20,15 @@ class PriceValidationService {
     if (q.price <= 0) {
       return const ValidationResult(false, 'price must be > 0');
     }
+    if (!q.change.isFinite ||
+        !q.changePercent.isFinite ||
+        (q.buy != null && !q.buy!.isFinite) ||
+        (q.sell != null && !q.sell!.isFinite) ||
+        !q.confidence.isFinite ||
+        q.confidence < 0 ||
+        q.confidence > 1) {
+      return const ValidationResult(false, 'non-finite metrics or invalid confidence');
+    }
     if (AssetCatalog.byId(q.id) == null) {
       return const ValidationResult(false, 'unknown asset id');
     }
