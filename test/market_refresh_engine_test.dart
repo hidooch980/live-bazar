@@ -224,6 +224,32 @@ void main() {
     await engine.dispose();
   });
 
+  test('partial successful responses stale omitted provider assets', () async {
+    var partial = false;
+    final fx = FakeProvider(
+      id: 'fx',
+      supportedAssets: {'fx_eur', 'fx_gbp'},
+    )..behavior = (_) async => ProviderResult(
+      quotes: partial
+          ? [quoteFor('fx_eur', price: 1.1, ts: t0.add(const Duration(seconds: 1)))]
+          : [
+              quoteFor('fx_eur', price: 1.1, ts: t0),
+              quoteFor('fx_gbp', price: 1.2, ts: t0),
+            ],
+    );
+    final engine = _engine([fx]);
+
+    final first = await engine.refresh(force: true);
+    expect(first!.quotes['fx_gbp']!.status, QuoteStatus.live);
+
+    partial = true;
+    final second = await engine.refresh(force: true);
+    expect(second!.sourceStatus['fx'], 'ok');
+    expect(second.quotes['fx_eur']!.status, QuoteStatus.live);
+    expect(second.quotes['fx_gbp']!.status, QuoteStatus.stale);
+    await engine.dispose();
+  });
+
   test('an empty successful response also downgrades carried quotes', () async {
     var empty = false;
     final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
