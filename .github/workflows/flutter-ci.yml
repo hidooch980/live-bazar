@@ -36,6 +36,9 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Show required test formatting
+        run: dart format --output=show test/market_refresh_engine_test.dart
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
