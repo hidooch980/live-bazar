@@ -82,12 +82,12 @@ class CryptoProvider implements IPriceProvider {
           'ids': map.values.join(','),
           'vs_currencies': 'usd',
           'include_24hr_change': 'true',
+          'include_last_updated_at': 'true',
         },
       );
       final data = res.data;
       if (data == null || data.isEmpty) return _bad('CoinGecko empty');
       final body = Map<String, dynamic>.from(data);
-      final ts = _serverTime(res) ?? DateTime.now().toUtc();
       final quotes = <PriceQuote>[];
       for (final e in map.entries) {
         if (!assetIds.contains(e.key)) continue;
@@ -95,7 +95,10 @@ class CryptoProvider implements IPriceProvider {
         if (coin is! Map) continue;
         final cd = Map<String, dynamic>.from(coin);
         final price = (cd['usd'] as num?)?.toDouble();
-        if (price == null || price <= 0) continue;
+        final ts = _sourceTimestamp(cd['last_updated_at']);
+        if (price == null || !price.isFinite || price <= 0 || ts == null) {
+          continue;
+        }
         quotes.add(
           _quote(
             e.key,
@@ -129,7 +132,6 @@ class CryptoProvider implements IPriceProvider {
       );
       final data = res.data;
       if (data == null) return _bad('Paprika empty');
-      final ts = _serverTime(res) ?? DateTime.now().toUtc();
       final quotes = <PriceQuote>[];
       for (final item in data) {
         final m = Map<String, dynamic>.from(item as Map);
@@ -140,7 +142,8 @@ class CryptoProvider implements IPriceProvider {
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
         final price = (m['price'] as num?)?.toDouble() ?? 0;
-        if (price <= 0) continue;
+        final ts = _sourceTimestamp(m['last_updated']);
+        if (!price.isFinite || price <= 0 || ts == null) continue;
         final pct = ((m['percent_change_24h'] as num?) ?? 0).toDouble();
         quotes.add(
           _quote(
@@ -173,7 +176,6 @@ class CryptoProvider implements IPriceProvider {
       final data = res.data;
       final listRaw = data?['data'];
       if (listRaw is! List) return _bad('CoinLore empty');
-      final ts = _serverTime(res) ?? DateTime.now().toUtc();
       final quotes = <PriceQuote>[];
       for (final item in listRaw) {
         final m = Map<String, dynamic>.from(item as Map);
@@ -184,7 +186,8 @@ class CryptoProvider implements IPriceProvider {
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
         final price = double.tryParse('${m['price_usd']}') ?? 0;
-        if (price <= 0) continue;
+        final ts = _sourceTimestamp(m['last_updated']);
+        if (!price.isFinite || price <= 0 || ts == null) continue;
         final pct = double.tryParse('${m['percent_change_24h']}') ?? 0;
         quotes.add(
           _quote(
@@ -217,7 +220,6 @@ class CryptoProvider implements IPriceProvider {
       final statsRaw = body?['stats'];
       if (statsRaw is! Map) return _bad('Nobitex empty');
       final stats = Map<String, dynamic>.from(statsRaw);
-      final ts = _serverTime(res) ?? DateTime.now().toUtc();
       const map = {'btc': 'btc_usd', 'eth': 'eth_usd', 'usdt': 'usdt_usd'};
       final quotes = <PriceQuote>[];
       stats.forEach((key, value) {
@@ -227,8 +229,13 @@ class CryptoProvider implements IPriceProvider {
         final v = Map<String, dynamic>.from(value);
         // "latest" is a stringified number in Nobitex responses.
         final price = double.tryParse('${v['latest']}') ?? 0;
-        if (price <= 0) return;
+        final ts = _sourceTimestamp(
+          v['last_updated'] ?? v['updatedAt'] ?? v['updated_at'] ??
+              v['timestamp'] ?? v['createdAt'] ?? v['created_at'],
+        );
+        if (!price.isFinite || price <= 0 || ts == null) return;
         final dayChange = double.tryParse('${v['dayChange']}') ?? 0;
+        if (!dayChange.isFinite) return;
         quotes.add(
           _quote(
             assetId,
@@ -291,6 +298,19 @@ class CryptoProvider implements IPriceProvider {
     ),
   );
 
-  DateTime? _serverTime(Response<dynamic> res) =>
-      DateTime.tryParse(res.headers.value('date') ?? '')?.toUtc();
+  DateTime? _sourceTimestamp(Object? raw) {
+    if (raw is num && raw > 0) {
+      // Provider APIs commonly publish Unix seconds; tolerate milliseconds.
+      final millis = raw > 100000000000 ? raw.toInt() : (raw * 1000).round();
+      try {
+        return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
+      } on RangeError {
+        return null;
+      }
+    }
+    if (raw is String && raw.trim().isNotEmpty) {
+      return DateTime.tryParse(raw.trim())?.toUtc();
+    }
+    return null;
+  }
 }
