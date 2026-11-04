@@ -258,12 +258,13 @@ void main() {
   });
 
   test('an empty successful response also downgrades carried quotes', () async {
+    final now = DateTime.now().toUtc();
     var empty = false;
     final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
       ..behavior = (_) async => empty
           ? const ProviderResult(quotes: [])
-          : ProviderResult(quotes: [quoteFor('fx_eur', price: 1.1, ts: t0)]);
-    final engine = _engine([fx]);
+          : ProviderResult(quotes: [quoteFor('fx_eur', price: 1.1, ts: now)]);
+    final engine = _engine([fx], now: () => now);
 
     final first = await engine.refresh(force: true);
     expect(first!.quotes['fx_eur']!.status, QuoteStatus.live);
