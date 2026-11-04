@@ -36,6 +36,9 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Show required Dart formatting
+        run: dart format --output=show lib/providers/adapters/crypto_provider.dart lib/providers/adapters/global_currency_provider.dart lib/services/validation/price_validation_service.dart
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
