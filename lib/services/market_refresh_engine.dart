@@ -148,7 +148,7 @@ class MarketRefreshEngine {
             } else {
               // Empty success is still a missed refresh. Do not leave cached
               // quotes from this provider falsely marked LIVE.
-              failedProviders.add(provider);
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'empty';
               providerStatus[provider.id] = 'empty';
             }
