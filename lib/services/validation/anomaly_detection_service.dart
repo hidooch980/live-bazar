@@ -18,6 +18,11 @@ class AnomalyDetectionService {
         candidate.price == last.price) {
       return AnomalyState.valid;
     }
+    // Defensive guard: a zero/invalid baseline must never reach division.
+    if (!last.price.isFinite || last.price <= 0 ||
+        !candidate.price.isFinite || candidate.price <= 0) {
+      return AnomalyState.rejected;
+    }
 
     // Timestamp regression => suspicious.
     if (candidate.timestamp.isBefore(last.timestamp)) {
