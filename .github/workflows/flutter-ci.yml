@@ -39,6 +39,9 @@ jobs:
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Test snapshot freshness policy
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
       - name: Analyze
         run: flutter analyze --fatal-infos
 
