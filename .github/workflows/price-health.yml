@@ -85,11 +85,15 @@ jobs:
                   except (ValueError, OverflowError, OSError) as e:
                       print(f'skip {aid}: {e}')
                       continue
+                  change_percent = cg[k].get('usd_24h_change', 0)
+                  if not isinstance(change_percent, (int, float)) or not math.isfinite(change_percent):
+                      print(f'skip {aid}: invalid percentage change')
+                      continue
                   quotes[aid] = {
                       'id': aid, 'symbol': s, 'name': n, 'nameFa': nf,
                       'category': 'crypto',
                       'price': price,
-                      'changePercent': cg[k].get('usd_24h_change', 0),
+                      'changePercent': change_percent,
                       'unit': '', 'currency': 'USD',
                       'timestamp': ts_cg, 'source': 'CoinGecko',
                       'status': status, 'confidence': 1.0,
