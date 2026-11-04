@@ -106,7 +106,7 @@ class MarketRefreshEngine {
       // provider covers but did not refresh is carried over from the last
       // snapshot and must stop claiming to be live.
       final refreshed = <String>{};
-      final failedProviders = <IPriceProvider>[];
+      final providersToCheckForStale = <IPriceProvider>[];
 
       final futures = <Future<bool?>>[];
       for (final entry in _providers.entries.where((e) => e.isActive)) {
@@ -126,6 +126,7 @@ class MarketRefreshEngine {
               provider.supportedAssets,
             );
             if (result.isSuccess && result.quotes.isNotEmpty) {
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'ok';
               providerStatus[provider.id] = 'ok';
               for (final q in result.quotes) {
@@ -138,7 +139,7 @@ class MarketRefreshEngine {
                 refreshed.add(q.id);
               }
             } else if (!result.isSuccess) {
-              failedProviders.add(provider);
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'failed';
               providerStatus[provider.id] = 'failed: ${result.error!.message}';
               debugPrint(
@@ -163,7 +164,7 @@ class MarketRefreshEngine {
 
       // A quote we could not refresh is STALE — distinct from DELAYED,
       // which means we DID refresh and the source itself is quiet.
-      for (final provider in failedProviders) {
+      for (final provider in providersToCheckForStale) {
         for (final assetId in provider.supportedAssets) {
           if (refreshed.contains(assetId)) continue;
           final carried = merged[assetId];
