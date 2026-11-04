@@ -224,6 +224,25 @@ void main() {
     await engine.dispose();
   });
 
+  test('an empty successful response also downgrades carried quotes', () async {
+    var empty = false;
+    final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur'})
+      ..behavior = (_) async => empty
+          ? const ProviderResult(quotes: [])
+          : ProviderResult(quotes: [quoteFor('fx_eur', price: 1.1, ts: t0)]);
+    final engine = _engine([fx]);
+
+    final first = await engine.refresh(force: true);
+    expect(first!.quotes['fx_eur']!.status, QuoteStatus.live);
+
+    empty = true;
+    final second = await engine.refresh(force: true);
+    expect(second!.sourceStatus['fx'], 'empty');
+    expect(second.quotes['fx_eur']!.price, 1.1);
+    expect(second.quotes['fx_eur']!.status, QuoteStatus.stale);
+    await engine.dispose();
+  });
+
   test('enabled assets and registered live sources match exactly (§7/§10)', () {
     final served = <String>{
       for (final entry in buildRegistry().entries.where((e) => e.isActive))
