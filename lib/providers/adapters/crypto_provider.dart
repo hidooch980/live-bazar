@@ -12,7 +12,6 @@ import '../iprice_provider.dart';
 /// 1. CoinGecko   — global default (geo-blocks some regions)
 /// 2. CoinPaprika — global alternative
 /// 3. CoinLore    — lightweight, usually reachable
-/// 4. Nobitex     — Iranian exchange, reachable inside Iran (USDT pairs)
 ///
 /// Only REAL published data with the endpoint's real timestamp is returned.
 class CryptoProvider implements IPriceProvider {
@@ -47,7 +46,6 @@ class CryptoProvider implements IPriceProvider {
       'CoinGecko': () => _fromCoinGecko(assetIds),
       'CoinPaprika': () => _fromCoinPaprika(assetIds),
       'CoinLore': () => _fromCoinLore(assetIds),
-      'Nobitex': () => _fromNobitex(assetIds),
     };
 
     Object? lastError;
@@ -211,54 +209,6 @@ class CryptoProvider implements IPriceProvider {
       return _err('CoinLore', e);
     } catch (e) {
       return _err('CoinLore', e);
-    }
-  }
-
-  // ---- 4) Nobitex (reachable inside Iran; USDT-denominated) ----------
-  Future<ProviderResult> _fromNobitex(Set<String> assetIds) async {
-    try {
-      final res = await _dio.post<Map<dynamic, dynamic>>(
-        'https://api.nobitex.ir/market/stats',
-        data: {'srcCurrency': 'btc,eth,usdt', 'dstCurrency': 'usdt'},
-      );
-      final body = res.data;
-      final statsRaw = body?['stats'];
-      if (statsRaw is! Map) return _bad('Nobitex empty');
-      final stats = Map<String, dynamic>.from(statsRaw);
-      const map = {'btc': 'btc_usd', 'eth': 'eth_usd', 'usdt': 'usdt_usd'};
-      final quotes = <PriceQuote>[];
-      stats.forEach((key, value) {
-        final assetId = map[key.toLowerCase()];
-        if (assetId == null || !assetIds.contains(assetId)) return;
-        if (value is! Map) return;
-        final v = Map<String, dynamic>.from(value);
-        // "latest" is a stringified number in Nobitex responses.
-        final price = double.tryParse('${v['latest']}') ?? 0;
-        final ts = _sourceTimestamp(
-          v['lastUpdate'] ?? v['last_update'] ?? v['last_updated'] ??
-              v['updatedAt'] ?? v['updated_at'] ?? v['timestamp'] ??
-              v['createdAt'] ?? v['created_at'],
-        );
-        if (!price.isFinite || price <= 0 || ts == null) return;
-        final dayChange = double.tryParse('${v['dayChange']}') ?? 0;
-        if (!dayChange.isFinite) return;
-        quotes.add(
-          _quote(
-            assetId,
-            price,
-            pct: dayChange,
-            ts: ts,
-            source: 'Nobitex',
-            status: QuoteStatus.live,
-          ),
-        );
-      });
-      if (quotes.isEmpty) return _bad('Nobitex no usable quotes');
-      return ProviderResult(quotes: quotes);
-    } on DioException catch (e) {
-      return _err('Nobitex', e);
-    } catch (e) {
-      return _err('Nobitex', e);
     }
   }
 
