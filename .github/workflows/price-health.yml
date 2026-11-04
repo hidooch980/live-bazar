@@ -77,20 +77,37 @@ jobs:
           for k, aid in coin_map.items():
               if k in cg and 'usd' in cg[k]:
                   s, n, nf = names[aid]
+                  observed = cg[k].get('last_updated_at')
+                  price = cg[k].get('usd')
+                  if not isinstance(observed, (int, float)) or observed <= 0:
+                      print(f'skip {aid}: CoinGecko timestamp missing')
+                      continue
+                  if not isinstance(price, (int, float)) or price <= 0:
+                      print(f'skip {aid}: invalid price')
+                      continue
+                  ts_cg = datetime.datetime.fromtimestamp(observed, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                  try:
+                      status = quote_status(ts_cg)
+                  except (ValueError, OverflowError, OSError) as e:
+                      print(f'skip {aid}: {e}')
+                      continue
                   quotes[aid] = {
                       'id': aid, 'symbol': s, 'name': n, 'nameFa': nf,
                       'category': 'crypto',
-                      'price': cg[k]['usd'],
+                      'price': price,
                       'changePercent': cg[k].get('usd_24h_change', 0),
                       'unit': '', 'currency': 'USD',
-                      'timestamp': datetime.datetime.fromtimestamp(cg[k]['last_updated_at'], datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'source': 'CoinGecko',
-                      'status': quote_status(datetime.datetime.fromtimestamp(cg[k]['last_updated_at'], datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')), 'confidence': 1.0,
+                      'timestamp': ts_cg, 'source': 'CoinGecko',
+                      'status': status, 'confidence': 1.0,
                   }
 
           rates = fx.get('rates', {})
+          fx_updated = fx.get('time_last_update_unix')
+          if not isinstance(fx_updated, (int, float)) or fx_updated <= 0:
+              raise SystemExit('ExchangeRate-API timestamp missing; refusing to invent one')
           ts = datetime.datetime.fromtimestamp(
-              fx.get('time_last_update_unix', 0), datetime.timezone.utc
-          ).strftime('%Y-%m-%dT%H:%M:%SZ') if fx.get('time_last_update_unix') else now
+              fx_updated, datetime.timezone.utc
+          ).strftime('%Y-%m-%dT%H:%M:%SZ')
           for code in ['EUR','GBP','AED','TRY','CNY','CAD','AUD','CHF','JPY']:
               if code in rates and rates[code]:
                   aid = f'fx_{code.lower()}'
@@ -167,14 +184,23 @@ jobs:
                   ).strftime('%Y-%m-%dT%H:%M:%SZ')
               except (KeyError, TypeError, ValueError):
                   continue
+              try:
+                  status = quote_status(ts_ir)
+                  change_percent = float(row.get('dp') or 0) * sign
+              except (ValueError, TypeError, OverflowError, OSError) as e:
+                  print(f'skip {aid}: invalid TGJU observation: {e}')
+                  continue
+              if not (-100 <= change_percent <= 1000):
+                  print(f'skip {aid}: implausible percentage change')
+                  continue
               quotes[aid] = {
                   'id': aid, 'symbol': sym, 'name': name, 'nameFa': name_fa,
                   'category': cat,
                   'price': round(raw / div, 2),
-                  'changePercent': float(row.get('dp') or 0) * sign,
+                  'changePercent': change_percent,
                   'unit': unit, 'currency': cur,
                   'timestamp': ts_ir, 'source': 'TGJU',
-                  'status': quote_status(ts_ir), 'confidence': 1.0,
+                  'status': status, 'confidence': 1.0,
               }
 
           if not quotes:
