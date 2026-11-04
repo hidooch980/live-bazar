@@ -141,6 +141,18 @@ void main() {
       );
     });
 
+    test('timestamp regression is suspicious when price is unchanged', () {
+      final older = _q(
+        'fx_eur',
+        base.price,
+        ts: base.timestamp.subtract(const Duration(minutes: 1)),
+      );
+      expect(
+        svc.assess(candidate: older, previousValid: base),
+        AnomalyState.suspicious,
+      );
+    });
+
     test('valid on normal move', () {
       final next = _q(
         'fx_eur',
