@@ -112,16 +112,15 @@ void main() {
     expect(usd.timestamp, DateTime.utc(2026, 9, 1, 10, 26, 26));
   });
 
-  test('Persian digits parse; unusable rows are skipped, not faked', () {
+  test('Persian digits parse; rows without real timestamps are skipped', () {
     final quotes = parse();
-    // Persian-digit price still parses.
+    // Valid Persian-digit prices with real provider timestamps are retained.
     expect(
-      quotes.firstWhere((q) => q.id == 'coin_emami').price,
-      221985000, // 2,219,850,000 Rial -> Toman
+      quotes.firstWhere((q) => q.id == 'ir_usd').price,
+      213005, // 2,130,050 Rial -> Toman
     );
-    // Missing/blank timestamp falls back to the response time — never a
-    // fabricated "now" inside the quote.
-    expect(quotes.firstWhere((q) => q.id == 'coin_emami').timestamp, fallback);
+    // Missing/blank timestamps are not assigned response time or local now.
+    expect(quotes.where((q) => q.id == 'coin_emami'), isEmpty);
     // '-' placeholder yields no quote at all.
     expect(quotes.where((q) => q.id == 'coin_half'), isEmpty);
   });
