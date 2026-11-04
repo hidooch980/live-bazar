@@ -27,7 +27,10 @@ class PriceValidationService {
         !q.confidence.isFinite ||
         q.confidence < 0 ||
         q.confidence > 1) {
-      return const ValidationResult(false, 'non-finite metrics or invalid confidence');
+      return const ValidationResult(
+        false,
+        'non-finite metrics or invalid confidence',
+      );
     }
     if (AssetCatalog.byId(q.id) == null) {
       return const ValidationResult(false, 'unknown asset id');
