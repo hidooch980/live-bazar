@@ -286,5 +286,4 @@ class GlobalCurrencyProvider implements IPriceProvider {
       cause: e,
     ),
   );
-
 }
