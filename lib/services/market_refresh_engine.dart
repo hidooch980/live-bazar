@@ -228,9 +228,14 @@ class MarketRefreshEngine {
         // from it is fiction. Keep that verdict.
         if (incoming.status == QuoteStatus.previousClose ||
             incoming.status == QuoteStatus.stale ||
+            incoming.status == QuoteStatus.delayed ||
+            incoming.status == QuoteStatus.fallback ||
+            incoming.status == QuoteStatus.cached ||
+            incoming.status == QuoteStatus.unchanged ||
             incoming.status == QuoteStatus.dataConflict ||
             incoming.status == QuoteStatus.unavailable ||
-            incoming.status == QuoteStatus.error) {
+            incoming.status == QuoteStatus.error ||
+            incoming.status == QuoteStatus.serverRequired) {
           return q;
         }
         // Otherwise: this quote WAS just fetched successfully, so it is the
