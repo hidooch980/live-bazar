@@ -109,11 +109,14 @@ jobs:
           for code in ['EUR','GBP','AED','TRY','CNY','CAD','AUD','CHF','JPY']:
               rate = rates.get(code)
               if not isinstance(rate, bool) and isinstance(rate, (int, float)) and math.isfinite(rate) and rate > 0:
+                  price = 1.0 / rate
+                  if not math.isfinite(price) or price <= 0:
+                      continue
                   aid = f'fx_{code.lower()}'
                   quotes[aid] = {
                       'id': aid, 'symbol': code,
                       'category': 'currency',
-                      'price': round(1.0 / rate, 8),
+                      'price': round(price, 8),
                       'unit': '', 'currency': code,
                       'timestamp': ts, 'source': 'ExchangeRate-API',
                       'status': quote_status(ts), 'confidence': 1.0,
