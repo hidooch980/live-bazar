@@ -25,7 +25,7 @@ jobs:
         id: coingecko
         run: |
           code=$(curl -s -o /tmp/cg.json -w '%{http_code}' \
-            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true")
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true")
           echo "status=$code" >> "$GITHUB_OUTPUT"
           test "$code" = "200"
 
@@ -58,6 +58,18 @@ jobs:
           now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
           quotes = {}
 
+          def quote_status(timestamp):
+              if not timestamp:
+                  raise ValueError('missing provider timestamp')
+              parsed = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+              if parsed.tzinfo is None:
+                  raise ValueError('timestamp has no timezone')
+              age = datetime.datetime.now(datetime.timezone.utc) - parsed.astimezone(datetime.timezone.utc)
+              if age < datetime.timedelta(minutes=-5):
+                  raise ValueError('timestamp is in the future')
+              return 'LIVE' if age <= datetime.timedelta(minutes=30) else 'STALE'
+
+
           coin_map = {'bitcoin':'btc_usd','ethereum':'eth_usd','tether':'usdt_usd'}
           names = {'btc_usd':('BTC/USD','Bitcoin','بیت‌کوین'),
                    'eth_usd':('ETH/USD','Ethereum','اتریوم'),
@@ -71,8 +83,8 @@ jobs:
                       'price': cg[k]['usd'],
                       'changePercent': cg[k].get('usd_24h_change', 0),
                       'unit': '', 'currency': 'USD',
-                      'timestamp': now, 'source': 'CoinGecko',
-                      'status': 'LIVE', 'confidence': 1.0,
+                      'timestamp': datetime.datetime.fromtimestamp(cg[k]['last_updated_at'], datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), 'source': 'CoinGecko',
+                      'status': quote_status(datetime.datetime.fromtimestamp(cg[k]['last_updated_at'], datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')), 'confidence': 1.0,
                   }
 
           rates = fx.get('rates', {})
@@ -88,7 +100,7 @@ jobs:
                       'price': round(1.0 / rates[code], 8),
                       'unit': '', 'currency': code,
                       'timestamp': ts, 'source': 'ExchangeRate-API',
-                      'status': 'LIVE', 'confidence': 1.0,
+                      'status': quote_status(ts), 'confidence': 1.0,
                   }
 
           # ---- Iranian free market / gold / coins (TGJU, Rial -> Toman) ----
@@ -154,7 +166,7 @@ jobs:
                       datetime.timezone.utc
                   ).strftime('%Y-%m-%dT%H:%M:%SZ')
               except (KeyError, TypeError, ValueError):
-                  ts_ir = now
+                  continue
               quotes[aid] = {
                   'id': aid, 'symbol': sym, 'name': name, 'nameFa': name_fa,
                   'category': cat,
@@ -162,8 +174,11 @@ jobs:
                   'changePercent': float(row.get('dp') or 0) * sign,
                   'unit': unit, 'currency': cur,
                   'timestamp': ts_ir, 'source': 'TGJU',
-                  'status': 'LIVE', 'confidence': 1.0,
+                  'status': quote_status(ts_ir), 'confidence': 1.0,
               }
+
+          if not quotes:
+              raise SystemExit('No valid timestamped quotes; refusing to publish an empty snapshot')
 
           snap = {
               'timestamp': now,
