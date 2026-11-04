@@ -227,23 +227,21 @@ void main() {
   test('partial successful responses stale omitted provider assets', () async {
     final now = DateTime.now().toUtc();
     var partial = false;
-    final fx = FakeProvider(
-      id: 'fx',
-      supportedAssets: {'fx_eur', 'fx_gbp'},
-    )..behavior = (_) async => ProviderResult(
-      quotes: partial
-          ? [
-              quoteFor(
-                'fx_eur',
-                price: 1.1,
-                ts: now.add(const Duration(seconds: 1)),
-              ),
-            ]
-          : [
-              quoteFor('fx_eur', price: 1.1, ts: now),
-              quoteFor('fx_gbp', price: 1.2, ts: now),
-            ],
-    );
+    final fx = FakeProvider(id: 'fx', supportedAssets: {'fx_eur', 'fx_gbp'})
+      ..behavior = (_) async => ProviderResult(
+        quotes: partial
+            ? [
+                quoteFor(
+                  'fx_eur',
+                  price: 1.1,
+                  ts: now.add(const Duration(seconds: 1)),
+                ),
+              ]
+            : [
+                quoteFor('fx_eur', price: 1.1, ts: now),
+                quoteFor('fx_gbp', price: 1.2, ts: now),
+              ],
+      );
     final engine = _engine([fx], now: () => now);
 
     final first = await engine.refresh(force: true);
