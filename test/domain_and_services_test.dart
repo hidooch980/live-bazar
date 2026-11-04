@@ -103,6 +103,18 @@ void main() {
       );
     });
 
+    test('rejects a zero candidate before equality shortcuts', () {
+      final zero = _q(
+        'fx_eur',
+        0,
+        ts: base.timestamp.add(const Duration(minutes: 1)),
+      );
+      expect(
+        svc.assess(candidate: zero, previousValid: base),
+        AnomalyState.rejected,
+      );
+    });
+
     test('valid on normal move', () {
       final next = _q(
         'fx_eur',
