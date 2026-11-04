@@ -5,8 +5,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # Manual run, optionally on another runner image (e.g. to try 26.04
-  # before switching) — never publishes anything.
   workflow_dispatch:
     inputs:
       runner:
@@ -17,9 +15,8 @@ on:
 
 jobs:
   analyze-test:
-    # Pinned: ubuntu-latest moves to 26.04 from 2026-10-19. Stay on the
-    # known-good image; a manual run can try 26.04 first.
     runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
 
@@ -48,10 +45,16 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
-      # Analyze and test never touch Gradle, so a broken native dependency
-      # would only surface at release time. Build it here instead.
       - name: Build APK (debug — native/Gradle gate)
         run: flutter build apk --debug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-bazar-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload coverage
         if: always()
@@ -59,3 +62,4 @@ jobs:
         with:
           name: coverage
           path: coverage/lcov.info
+          if-no-files-found: ignore
