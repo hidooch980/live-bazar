@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:live_bazar/domain/entities/market_snapshot.dart';
 import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/services/market_pulse_service.dart';
 import 'package:live_bazar/services/market_score_service.dart';
@@ -26,6 +27,22 @@ PriceQuote _q(
 );
 
 void main() {
+  group('MarketSnapshot', () {
+    test('rejects a missing or malformed timestamp instead of using now', () {
+      expect(
+        () => MarketSnapshot.fromJson({'quotes': <String, dynamic>{}}),
+        throwsFormatException,
+      );
+      expect(
+        () => MarketSnapshot.fromJson({
+          'timestamp': 'not-a-date',
+          'quotes': <String, dynamic>{},
+        }),
+        throwsFormatException,
+      );
+    });
+  });
+
   group('PriceQuote', () {
     test('json roundtrip preserves all fields', () {
       final q = _q('fx_eur', 1.08, changePercent: -1.5);
