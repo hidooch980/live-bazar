@@ -139,10 +139,15 @@ class CryptoProvider implements IPriceProvider {
             .map((e) => e.key)
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
-        final price = (m['price'] as num?)?.toDouble() ?? 0;
+        final quotesRaw = m['quotes'];
+        if (quotesRaw is! Map) continue;
+        final usdRaw = quotesRaw['USD'];
+        if (usdRaw is! Map) continue;
+        final usd = Map<String, dynamic>.from(usdRaw);
+        final price = (usd['price'] as num?)?.toDouble() ?? 0;
         final ts = _sourceTimestamp(m['last_updated']);
         if (!price.isFinite || price <= 0 || ts == null) continue;
-        final pct = ((m['percent_change_24h'] as num?) ?? 0).toDouble();
+        final pct = ((usd['percent_change_24h'] as num?) ?? 0).toDouble();
         quotes.add(
           _quote(
             assetId,
