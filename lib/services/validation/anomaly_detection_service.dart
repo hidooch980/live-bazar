@@ -22,14 +22,13 @@ class AnomalyDetectionService {
     if (!last.price.isFinite || last.price <= 0) {
       return AnomalyState.rejected;
     }
+    // Timestamp regression => suspicious, even when the price is unchanged.
+    if (candidate.timestamp.isBefore(last.timestamp)) {
+      return AnomalyState.suspicious;
+    }
     if (candidate.timestamp == last.timestamp ||
         candidate.price == last.price) {
       return AnomalyState.valid;
-    }
-
-    // Timestamp regression => suspicious.
-    if (candidate.timestamp.isBefore(last.timestamp)) {
-      return AnomalyState.suspicious;
     }
 
     final rel = ((candidate.price - last.price).abs()) / last.price;
