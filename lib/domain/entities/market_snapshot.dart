@@ -41,11 +41,17 @@ class MarketSnapshot {
 
   static MarketSnapshot fromJson(Map<String, dynamic> json) {
     final rawQuotes = (json['quotes'] as Map<String, dynamic>? ?? {});
+    final rawTimestamp = json['timestamp'];
+    if (rawTimestamp is! String || rawTimestamp.trim().isEmpty) {
+      throw const FormatException('snapshot timestamp is missing');
+    }
+    final parsedTimestamp = DateTime.tryParse(rawTimestamp);
+    if (parsedTimestamp == null) {
+      throw const FormatException('snapshot timestamp is invalid');
+    }
     return MarketSnapshot(
       snapshotId: (json['snapshotId'] as String?) ?? 'unknown',
-      timestamp:
-          DateTime.tryParse(json['timestamp'] as String? ?? '') ??
-          DateTime.now().toUtc(),
+      timestamp: parsedTimestamp.toUtc(),
       latencyMs: (json['latencyMs'] as num?)?.toInt() ?? 0,
       sourceStatus: ((json['sourceStatus'] as Map<String, dynamic>?) ?? {}).map(
         (k, v) => MapEntry(k, v.toString()),
