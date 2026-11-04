@@ -51,24 +51,14 @@ jobs:
         if: success()
         run: |
           python3 - <<'PY'
-          import json, datetime, pathlib
+          import json, datetime, pathlib, sys
+          sys.path.insert(0, 'scripts')
+          from snapshot_freshness import quote_status
 
-          cg = json.load(open('/tmp/cg.json'))
-          fx = json.load(open('/tmp/fx.json'))
+          cg = json.load(open('/tmp/cg.json', encoding='utf-8'))
+          fx = json.load(open('/tmp/fx.json', encoding='utf-8'))
           now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
           quotes = {}
-
-          def quote_status(timestamp):
-              if not timestamp:
-                  raise ValueError('missing provider timestamp')
-              parsed = datetime.datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-              if parsed.tzinfo is None:
-                  raise ValueError('timestamp has no timezone')
-              age = datetime.datetime.now(datetime.timezone.utc) - parsed.astimezone(datetime.timezone.utc)
-              if age < datetime.timedelta(minutes=-5):
-                  raise ValueError('timestamp is in the future')
-              return 'LIVE' if age <= datetime.timedelta(minutes=30) else 'STALE'
-
 
           coin_map = {'bitcoin':'btc_usd','ethereum':'eth_usd','tether':'usdt_usd'}
           names = {'btc_usd':('BTC/USD','Bitcoin','بیت‌کوین'),
