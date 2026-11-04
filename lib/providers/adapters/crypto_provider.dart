@@ -142,8 +142,7 @@ class CryptoProvider implements IPriceProvider {
             .firstWhere((v) => assetIds.contains(v), orElse: () => '');
         if (assetId.isEmpty) continue;
         final price = (m['price'] as num?)?.toDouble() ?? 0;
-        final ts = _sourceTimestamp(m['last_updated']);
-        if (!price.isFinite || price <= 0 || ts == null) continue;
+        if (!price.isFinite || price <= 0) continue;
         final pct = ((m['percent_change_24h'] as num?) ?? 0).toDouble();
         quotes.add(
           _quote(
@@ -175,7 +174,13 @@ class CryptoProvider implements IPriceProvider {
       );
       final data = res.data;
       final listRaw = data?['data'];
-      if (listRaw is! List) return _bad('CoinLore empty');
+      final infoRaw = data?['info'];
+      final responseTime = infoRaw is Map
+          ? _sourceTimestamp(infoRaw['time'])
+          : null;
+      if (listRaw is! List || responseTime == null) {
+        return _bad('CoinLore missing data or response timestamp');
+      }
       final quotes = <PriceQuote>[];
       for (final item in listRaw) {
         final m = Map<String, dynamic>.from(item as Map);
@@ -194,7 +199,7 @@ class CryptoProvider implements IPriceProvider {
             assetId,
             price,
             pct: pct,
-            ts: ts,
+            ts: responseTime,
             source: 'CoinLore',
             status: QuoteStatus.live,
           ),
@@ -230,8 +235,9 @@ class CryptoProvider implements IPriceProvider {
         // "latest" is a stringified number in Nobitex responses.
         final price = double.tryParse('${v['latest']}') ?? 0;
         final ts = _sourceTimestamp(
-          v['last_updated'] ?? v['updatedAt'] ?? v['updated_at'] ??
-              v['timestamp'] ?? v['createdAt'] ?? v['created_at'],
+          v['lastUpdate'] ?? v['last_update'] ?? v['last_updated'] ??
+              v['updatedAt'] ?? v['updated_at'] ?? v['timestamp'] ??
+              v['createdAt'] ?? v['created_at'],
         );
         if (!price.isFinite || price <= 0 || ts == null) return;
         final dayChange = double.tryParse('${v['dayChange']}') ?? 0;
