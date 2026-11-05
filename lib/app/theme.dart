@@ -84,23 +84,30 @@ abstract final class AppTheme {
         elevation: 12,
         indicatorColor: gold.withValues(alpha: dark ? 0.22 : 0.16),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(
-          size: states.contains(WidgetState.selected) ? 24 : 22,
-          color: states.contains(WidgetState.selected) ? goldDeep : subtext,
-        )),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
-          fontFamily: 'Vazirmatn',
-          fontSize: 11,
-          fontWeight: states.contains(WidgetState.selected)
-              ? FontWeight.w800
-              : FontWeight.w500,
-          color: states.contains(WidgetState.selected) ? goldDeep : subtext,
-        )),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            size: states.contains(WidgetState.selected) ? 24 : 22,
+            color: states.contains(WidgetState.selected) ? goldDeep : subtext,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontFamily: 'Vazirmatn',
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w800
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected) ? goldDeep : subtext,
+          ),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: dark ? const Color(0xFF1B2940) : const Color(0xFFF8F9FC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: outline),
@@ -119,14 +126,18 @@ abstract final class AppTheme {
           backgroundColor: goldDeep,
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(44, 46),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           side: BorderSide(color: outline),
         ),
       ),

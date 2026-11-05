@@ -42,10 +42,7 @@ class HomeScreen extends ConsumerWidget {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('بازار مولیدو'),
-            _AppVersionLabel(),
-          ],
+          children: [Text('بازار مولیدو'), _AppVersionLabel()],
         ),
         actions: [
           IconButton(
@@ -70,7 +67,9 @@ class HomeScreen extends ConsumerWidget {
                   break;
                 case 'customize':
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const CustomizeHomeScreen(),
+                    ),
                   );
                   break;
                 case 'portfolio':
@@ -86,10 +85,38 @@ class HomeScreen extends ConsumerWidget {
               }
             },
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'share', child: ListTile(leading: Icon(Icons.ios_share), title: Text('اشتراک کارت قیمت'), contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'customize', child: ListTile(leading: Icon(Icons.tune), title: Text('شخصی‌سازی خانه'), contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'portfolio', child: ListTile(leading: Icon(Icons.account_balance_wallet_outlined), title: Text('پورتفولیو'), contentPadding: EdgeInsets.zero)),
-              PopupMenuItem(value: 'alerts', child: ListTile(leading: Icon(Icons.notifications_outlined), title: Text('هشدارها'), contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(
+                value: 'share',
+                child: ListTile(
+                  leading: Icon(Icons.ios_share),
+                  title: Text('اشتراک کارت قیمت'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'customize',
+                child: ListTile(
+                  leading: Icon(Icons.tune),
+                  title: Text('شخصی‌سازی خانه'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'portfolio',
+                child: ListTile(
+                  leading: Icon(Icons.account_balance_wallet_outlined),
+                  title: Text('پورتفولیو'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'alerts',
+                child: ListTile(
+                  leading: Icon(Icons.notifications_outlined),
+                  title: Text('هشدارها'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
             ],
           ),
         ],

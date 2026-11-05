@@ -142,19 +142,39 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-
 /// A single, discoverable hub for tools that are not in the primary tabs.
 class _QuickAccessSection extends StatelessWidget {
   const _QuickAccessSection();
 
   @override
   Widget build(BuildContext context) {
-    final entries = <({IconData icon, String title, String subtitle, Widget page})>[
-      (icon: Icons.account_balance_wallet_outlined, title: 'پورتفولیو', subtitle: 'دارایی‌ها و ارزش سبد', page: const PortfolioScreen()),
-      (icon: Icons.notifications_active_outlined, title: 'هشدارهای قیمت', subtitle: 'ساخت و مدیریت هشدارها', page: const AlertsScreen()),
-      (icon: Icons.dashboard_customize_outlined, title: 'شخصی‌سازی خانه', subtitle: 'چیدمان بخش‌های صفحه اصلی', page: const CustomizeHomeScreen()),
-      (icon: Icons.widgets_outlined, title: 'ویجت صفحه اصلی', subtitle: 'نمایش قیمت روی صفحه گوشی', page: const HomeWidgetSettingsScreen()),
-    ];
+    final entries =
+        <({IconData icon, String title, String subtitle, Widget page})>[
+          (
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'پورتفولیو',
+            subtitle: 'دارایی‌ها و ارزش سبد',
+            page: const PortfolioScreen(),
+          ),
+          (
+            icon: Icons.notifications_active_outlined,
+            title: 'هشدارهای قیمت',
+            subtitle: 'ساخت و مدیریت هشدارها',
+            page: const AlertsScreen(),
+          ),
+          (
+            icon: Icons.dashboard_customize_outlined,
+            title: 'شخصی‌سازی خانه',
+            subtitle: 'چیدمان بخش‌های صفحه اصلی',
+            page: const CustomizeHomeScreen(),
+          ),
+          (
+            icon: Icons.widgets_outlined,
+            title: 'ویجت صفحه اصلی',
+            subtitle: 'نمایش قیمت روی صفحه گوشی',
+            page: const HomeWidgetSettingsScreen(),
+          ),
+        ];
 
     return Card(
       child: Padding(
@@ -162,9 +182,18 @@ class _QuickAccessSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('دسترسی سریع', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+            const Text(
+              'دسترسی سریع',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: 4),
-            Text('ابزارهای اصلی برنامه در یک جا', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
+            Text(
+              'ابزارهای اصلی برنامه در یک جا',
+              style: TextStyle(
+                color: Theme.of(context).hintColor,
+                fontSize: 12,
+              ),
+            ),
             const SizedBox(height: 8),
             for (final entry in entries)
               ListTile(
@@ -174,10 +203,15 @@ class _QuickAccessSection extends StatelessWidget {
                   foregroundColor: AppTheme.goldDeep,
                   child: Icon(entry.icon),
                 ),
-                title: Text(entry.title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                title: Text(
+                  entry.title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 subtitle: Text(entry.subtitle),
                 trailing: const Icon(Icons.chevron_left),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => entry.page)),
+                onTap: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (_) => entry.page)),
               ),
           ],
         ),
