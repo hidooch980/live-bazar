@@ -27,7 +27,9 @@ Future<void> runUpdateFlow(
 
   if (result.errorMessage != null) {
     messenger.showSnackBar(
-      SnackBar(content: Text('بررسی بروزرسانی ناموفق بود: ${result.errorMessage}')),
+      SnackBar(
+        content: Text('بررسی بروزرسانی ناموفق بود: ${result.errorMessage}'),
+      ),
     );
     return;
   }
