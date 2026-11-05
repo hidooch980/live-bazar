@@ -51,6 +51,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
+          set -euo pipefail
           mkdir -p android/keystore
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > android/keystore/molido-release.p12
           {
@@ -68,11 +69,21 @@ jobs:
       - name: Build APK (release, signed with the release key)
         run: flutter build apk --release
 
-      - name: Verify APK signature
+      - name: Verify APK signature and pin the established certificate
+        env:
+          EXPECTED_CERT_SHA256: f0810e716f1e6180edca9bef7a4cf452062317445c82c40e939b743f7dc24fa7
         run: |
+          set -euo pipefail
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           APK=build/app/outputs/flutter-apk/app-release.apk
-          "$APKSIGNER" verify --print-certs --verbose "$APK"
+          test -s "$APK"
+          VERIFY_OUTPUT=$("$APKSIGNER" verify --print-certs --verbose "$APK")
+          printf '%s\n' "$VERIFY_OUTPUT"
+          printf '%s\n' "$VERIFY_OUTPUT" | grep -Fq "Number of signers: 1"
+          printf '%s\n' "$VERIFY_OUTPUT" | grep -Fq "certificate SHA-256 digest: $EXPECTED_CERT_SHA256" || {
+            echo "::error::Release certificate does not match the established MOLIDO MARKET signing key."
+            exit 1
+          }
 
       - name: Rename artifact
         env:
