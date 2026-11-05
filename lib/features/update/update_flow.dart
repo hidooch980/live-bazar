@@ -9,8 +9,8 @@ final updateServiceProvider = Provider<UpdateService>((ref) => UpdateService());
 
 /// One check per app session (used by the auto-check on startup).
 final updateCheckProvider = FutureProvider<UpdateCheckResult>((ref) async {
-  final svc = ref.watch(updateServiceProvider);
-  return svc.check();
+  final service = ref.watch(updateServiceProvider);
+  return service.check();
 });
 
 /// Runs the guided update flow: check → confirm → download → installer.
@@ -19,12 +19,18 @@ Future<void> runUpdateFlow(
   WidgetRef ref, {
   UpdateCheckResult? precheck,
 }) async {
-  final svc = ref.read(updateServiceProvider);
+  final service = ref.read(updateServiceProvider);
   final messenger = ScaffoldMessenger.of(context);
 
-  // 1) Check latest GitHub release (reuse precheck when provided).
-  final result = precheck ?? await svc.check();
+  final result = precheck ?? await service.check();
   if (!context.mounted) return;
+
+  if (result.errorMessage != null) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('بررسی بروزرسانی ناموفق بود: ${result.errorMessage}')),
+    );
+    return;
+  }
 
   if (!result.hasUpdate) {
     messenger.showSnackBar(
@@ -33,10 +39,9 @@ Future<void> runUpdateFlow(
     return;
   }
 
-  // 2) Confirm.
   final confirmed = await showDialog<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
       title: const Text('بروزرسانی موجود است'),
       content: Text(
         'نسخه ${result.latestVersion!.replaceFirst('v', '').faString} در دسترس است.\n'
@@ -45,11 +50,11 @@ Future<void> runUpdateFlow(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
+          onPressed: () => Navigator.pop(dialogContext, false),
           child: const Text('بعداً'),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
+          onPressed: () => Navigator.pop(dialogContext, true),
           child: const Text('دانلود و نصب'),
         ),
       ],
@@ -57,26 +62,25 @@ Future<void> runUpdateFlow(
   );
   if (confirmed != true || !context.mounted) return;
 
-  // 3) Download with live progress.
   final progress = ValueNotifier<double>(0);
   String? apkPath;
   String? error;
   final ok = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (ctx) => _DownloadDialog(
+    builder: (dialogContext) => _DownloadDialog(
       progress: progress,
       start: () async {
         try {
-          apkPath = await svc.downloadApk(
+          apkPath = await service.downloadApk(
             result.apkUrl!,
-            onProgress: (r, t) {
-              progress.value = t > 0 ? r / t : 0;
+            onProgress: (received, total) {
+              progress.value = total > 0 ? received / total : 0;
             },
           );
           return true;
-        } on DioException catch (e) {
-          error = e.type == DioExceptionType.cancel
+        } on DioException catch (exception) {
+          error = exception.type == DioExceptionType.cancel
               ? 'لغو شد'
               : 'خطا در دانلود — اتصال را بررسی کنید';
           return false;
@@ -97,8 +101,7 @@ Future<void> runUpdateFlow(
   }
   if (apkPath == null) return;
 
-  // 4) Hand off to the Android package installer.
-  final started = await svc.install(apkPath!);
+  final started = await service.install(apkPath!);
   if (!started) {
     messenger.showSnackBar(
       const SnackBar(
@@ -126,9 +129,9 @@ class _DownloadDialogState extends State<_DownloadDialog> {
   @override
   void initState() {
     super.initState();
-    widget.start.then((ok) {
+    widget.start.then((success) {
       _done = true;
-      if (mounted) Navigator.of(context).pop(ok);
+      if (mounted) Navigator.of(context).pop(success);
     });
   }
 
@@ -140,12 +143,12 @@ class _DownloadDialogState extends State<_DownloadDialog> {
         title: const Text('در حال دانلود بروزرسانی...'),
         content: ValueListenableBuilder<double>(
           valueListenable: widget.progress,
-          builder: (_, v, _) => Column(
+          builder: (_, value, _) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              LinearProgressIndicator(value: v <= 0 ? null : v),
+              LinearProgressIndicator(value: value <= 0 ? null : value),
               const SizedBox(height: 8),
-              Text('${(v * 100).toStringAsFixed(0)}٪'.faString),
+              Text('${(value * 100).toStringAsFixed(0)}٪'.faString),
             ],
           ),
         ),
