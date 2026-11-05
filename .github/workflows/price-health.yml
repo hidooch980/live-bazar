@@ -25,7 +25,7 @@ jobs:
         id: coingecko
         run: |
           code=$(curl -s -o /tmp/cg.json -w '%{http_code}' \
-            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true")
+            "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true")
           echo "status=$code" >> "$GITHUB_OUTPUT"
           test "$code" = "200"
 
@@ -51,10 +51,16 @@ jobs:
         if: success()
         run: |
           python3 - <<'PY'
-          import json, datetime, pathlib
+          import json, datetime, pathlib, sys, math
+          sys.path.insert(0, 'scripts')
+          from snapshot_freshness import quote_status
 
-          cg = json.load(open('/tmp/cg.json'))
-          fx = json.load(open('/tmp/fx.json'))
+          cg = json.load(open('/tmp/cg.json', encoding='utf-8'))
+          fx = json.load(open('/tmp/fx.json', encoding='utf-8'))
+          if not isinstance(cg, dict) or cg.get('error'):
+              raise SystemExit('CoinGecko returned an invalid payload')
+          if not isinstance(fx, dict) or not isinstance(fx.get('rates'), dict):
+              raise SystemExit('ExchangeRate-API returned an invalid payload')
           now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
           quotes = {}
 
@@ -65,30 +71,55 @@ jobs:
           for k, aid in coin_map.items():
               if k in cg and 'usd' in cg[k]:
                   s, n, nf = names[aid]
+                  observed = cg[k].get('last_updated_at')
+                  price = cg[k].get('usd')
+                  if isinstance(observed, bool) or not isinstance(observed, (int, float)) or not math.isfinite(observed) or observed <= 0:
+                      print(f'skip {aid}: CoinGecko timestamp missing')
+                      continue
+                  if isinstance(price, bool) or not isinstance(price, (int, float)) or not math.isfinite(price) or price <= 0:
+                      print(f'skip {aid}: invalid price')
+                      continue
+                  try:
+                      ts_cg = datetime.datetime.fromtimestamp(observed, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+                      status = quote_status(ts_cg)
+                  except (ValueError, OverflowError, OSError) as e:
+                      print(f'skip {aid}: {e}')
+                      continue
+                  change_percent = cg[k].get('usd_24h_change', 0)
+                  if not isinstance(change_percent, (int, float)) or not math.isfinite(change_percent):
+                      print(f'skip {aid}: invalid percentage change')
+                      continue
                   quotes[aid] = {
                       'id': aid, 'symbol': s, 'name': n, 'nameFa': nf,
                       'category': 'crypto',
-                      'price': cg[k]['usd'],
-                      'changePercent': cg[k].get('usd_24h_change', 0),
+                      'price': price,
+                      'changePercent': change_percent,
                       'unit': '', 'currency': 'USD',
-                      'timestamp': now, 'source': 'CoinGecko',
-                      'status': 'LIVE', 'confidence': 1.0,
+                      'timestamp': ts_cg, 'source': 'CoinGecko',
+                      'status': status, 'confidence': 1.0,
                   }
 
           rates = fx.get('rates', {})
+          fx_updated = fx.get('time_last_update_unix')
+          if isinstance(fx_updated, bool) or not isinstance(fx_updated, (int, float)) or not math.isfinite(fx_updated) or fx_updated <= 0:
+              raise SystemExit('ExchangeRate-API timestamp missing; refusing to invent one')
           ts = datetime.datetime.fromtimestamp(
-              fx.get('time_last_update_unix', 0), datetime.timezone.utc
-          ).strftime('%Y-%m-%dT%H:%M:%SZ') if fx.get('time_last_update_unix') else now
+              fx_updated, datetime.timezone.utc
+          ).strftime('%Y-%m-%dT%H:%M:%SZ')
           for code in ['EUR','GBP','AED','TRY','CNY','CAD','AUD','CHF','JPY']:
-              if code in rates and rates[code]:
+              rate = rates.get(code)
+              if not isinstance(rate, bool) and isinstance(rate, (int, float)) and math.isfinite(rate) and rate > 0:
+                  price = 1.0 / rate
+                  if not math.isfinite(price) or price <= 0:
+                      continue
                   aid = f'fx_{code.lower()}'
                   quotes[aid] = {
                       'id': aid, 'symbol': code,
                       'category': 'currency',
-                      'price': round(1.0 / rates[code], 8),
+                      'price': round(price, 8),
                       'unit': '', 'currency': code,
                       'timestamp': ts, 'source': 'ExchangeRate-API',
-                      'status': 'LIVE', 'confidence': 1.0,
+                      'status': quote_status(ts), 'confidence': 1.0,
                   }
 
           # ---- Iranian free market / gold / coins (TGJU, Rial -> Toman) ----
@@ -130,7 +161,10 @@ jobs:
           tehran = datetime.timezone(datetime.timedelta(hours=3, minutes=30))
           try:
               with open('/tmp/ir.json', encoding='utf-8') as fh:
-                  ir = json.load(fh).get('current', {})
+                  ir_payload = json.load(fh)
+              ir = ir_payload.get('current', {}) if isinstance(ir_payload, dict) else {}
+              if not isinstance(ir, dict):
+                  ir = {}
           except Exception as e:
               ir = {}
               print(f'tgju unavailable: {e}')
@@ -140,9 +174,9 @@ jobs:
                   continue
               try:
                   raw = float(str(row.get('p', '')).replace(',', ''))
-              except ValueError:
+              except (TypeError, ValueError):
                   continue
-              if raw <= 0:
+              if not math.isfinite(raw) or raw <= 0:
                   continue
               aid, sym, name, name_fa, cat, unit, cur = meta
               div = 10.0 if cur == 'IRR' else 1.0
@@ -154,16 +188,28 @@ jobs:
                       datetime.timezone.utc
                   ).strftime('%Y-%m-%dT%H:%M:%SZ')
               except (KeyError, TypeError, ValueError):
-                  ts_ir = now
+                  continue
+              try:
+                  status = quote_status(ts_ir)
+                  change_percent = float(row.get('dp') or 0) * sign
+              except (ValueError, TypeError, OverflowError, OSError) as e:
+                  print(f'skip {aid}: invalid TGJU observation: {e}')
+                  continue
+              if not (-100 <= change_percent <= 1000):
+                  print(f'skip {aid}: implausible percentage change')
+                  continue
               quotes[aid] = {
                   'id': aid, 'symbol': sym, 'name': name, 'nameFa': name_fa,
                   'category': cat,
                   'price': round(raw / div, 2),
-                  'changePercent': float(row.get('dp') or 0) * sign,
+                  'changePercent': change_percent,
                   'unit': unit, 'currency': cur,
                   'timestamp': ts_ir, 'source': 'TGJU',
-                  'status': 'LIVE', 'confidence': 1.0,
+                  'status': status, 'confidence': 1.0,
               }
+
+          if not quotes:
+              raise SystemExit('No valid timestamped quotes; refusing to publish an empty snapshot')
 
           snap = {
               'timestamp': now,

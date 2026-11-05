@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-05T00:05:05Z",
+  "timestamp": "2026-11-04T18:58:05Z",
   "source": "github-actions-static-snapshot",
   "status": "SNAPSHOT",
   "quotes": {
@@ -9,14 +9,14 @@
       "name": "Bitcoin",
       "nameFa": "بیت‌کوین",
       "category": "crypto",
-      "price": 80489,
-      "changePercent": 4.05394576909452,
+      "price": 80275,
+      "changePercent": 3.5755554608570645,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-05T00:05:05Z",
+      "timestamp": "2026-11-04T18:58:05Z",
       "source": "CoinGecko",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "eth_usd": {
       "id": "eth_usd",
@@ -24,14 +24,14 @@
       "name": "Ethereum",
       "nameFa": "اتریوم",
       "category": "crypto",
-      "price": 2421.52,
-      "changePercent": 6.501470206777926,
+      "price": 2419.98,
+      "changePercent": 5.628388590908106,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-05T00:05:05Z",
+      "timestamp": "2026-11-04T18:58:05Z",
       "source": "CoinGecko",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "usdt_usd": {
       "id": "usdt_usd",
@@ -39,14 +39,14 @@
       "name": "Tether",
       "nameFa": "تتر",
       "category": "crypto",
-      "price": 0.999392,
-      "changePercent": 0.03493895760007665,
+      "price": 0.9994,
+      "changePercent": 0.028727322898356243,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-05T00:05:05Z",
+      "timestamp": "2026-11-04T18:58:05Z",
       "source": "CoinGecko",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_eur": {
       "id": "fx_eur",
@@ -57,8 +57,8 @@
       "currency": "EUR",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_gbp": {
       "id": "fx_gbp",
@@ -69,8 +69,8 @@
       "currency": "GBP",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_aed": {
       "id": "fx_aed",
@@ -81,8 +81,8 @@
       "currency": "AED",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_try": {
       "id": "fx_try",
@@ -93,8 +93,8 @@
       "currency": "TRY",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_cny": {
       "id": "fx_cny",
@@ -105,8 +105,8 @@
       "currency": "CNY",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_cad": {
       "id": "fx_cad",
@@ -117,8 +117,8 @@
       "currency": "CAD",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_aud": {
       "id": "fx_aud",
@@ -129,8 +129,8 @@
       "currency": "AUD",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_chf": {
       "id": "fx_chf",
@@ -141,8 +141,8 @@
       "currency": "CHF",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "fx_jpy": {
       "id": "fx_jpy",
@@ -153,8 +153,8 @@
       "currency": "JPY",
       "timestamp": "2026-11-04T00:02:31Z",
       "source": "ExchangeRate-API",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_usd": {
       "id": "ir_usd",
@@ -162,14 +162,14 @@
       "name": "US Dollar (Free Market)",
       "nameFa": "دلار آمریکا (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 268900.0,
-      "changePercent": 0.0,
+      "price": 268710,
+      "changePercent": -1.41,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T15:01:56Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_eur": {
       "id": "ir_eur",
@@ -177,14 +177,14 @@
       "name": "Euro (Free Market)",
       "nameFa": "یورو (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 302150.0,
-      "changePercent": 0.0,
+      "price": 302150,
+      "changePercent": -1.5,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_aed": {
       "id": "ir_aed",
@@ -192,14 +192,14 @@
       "name": "UAE Dirham (Free Market)",
       "nameFa": "درهم امارات (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 73523.0,
-      "changePercent": 0.0,
+      "price": 73523,
+      "changePercent": -1.71,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_gbp": {
       "id": "ir_gbp",
@@ -207,14 +207,14 @@
       "name": "British Pound (Free Market)",
       "nameFa": "پوند انگلیس (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 361920.0,
-      "changePercent": 0.0,
+      "price": 361920,
+      "changePercent": -1.4,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_try": {
       "id": "ir_try",
@@ -222,14 +222,14 @@
       "name": "Turkish Lira (Free Market)",
       "nameFa": "لیر ترکیه (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 5380.0,
-      "changePercent": 0.0,
+      "price": 5380,
+      "changePercent": -1.67,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T13:33:12Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_cny": {
       "id": "ir_cny",
@@ -237,14 +237,14 @@
       "name": "Chinese Yuan (Free Market)",
       "nameFa": "یوان چین (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 40290.0,
-      "changePercent": 0.0,
+      "price": 40290,
+      "changePercent": -1.76,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "gold_18k": {
       "id": "gold_18k",
@@ -252,14 +252,14 @@
       "name": "Gold 18K",
       "nameFa": "طلای ۱۸ عیار",
       "category": "gold",
-      "price": 26062100.0,
-      "changePercent": 0.0,
+      "price": 26062100,
+      "changePercent": 2.17,
       "unit": "گرم",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:56Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "gold_24k": {
       "id": "gold_24k",
@@ -267,14 +267,14 @@
       "name": "Gold 24K",
       "nameFa": "طلای ۲۴ عیار",
       "category": "gold",
-      "price": 34749200.0,
-      "changePercent": 0.0,
+      "price": 34749200,
+      "changePercent": 2.17,
       "unit": "گرم",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:56Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "mesghal": {
       "id": "mesghal",
@@ -282,14 +282,14 @@
       "name": "Mesghal Gold",
       "nameFa": "مثقال طلا",
       "category": "gold",
-      "price": 112899000.0,
-      "changePercent": 0.0,
+      "price": 112899000,
+      "changePercent": 2.17,
       "unit": "مثقال",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:58Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "xau_usd": {
       "id": "xau_usd",
@@ -297,14 +297,14 @@
       "name": "Gold Ounce / USD",
       "nameFa": "انس جهانی طلا",
       "category": "gold",
-      "price": 4063.92,
-      "changePercent": 0.03,
+      "price": 4062.25,
+      "changePercent": 3.57,
       "unit": "اونس",
       "currency": "USD",
-      "timestamp": "2026-11-04T23:59:57Z",
+      "timestamp": "2026-11-04T18:54:50Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "silver": {
       "id": "silver",
@@ -312,14 +312,14 @@
       "name": "Silver Ounce / USD",
       "nameFa": "انس جهانی نقره",
       "category": "gold",
-      "price": 52.25,
-      "changePercent": -0.01,
+      "price": 52.24,
+      "changePercent": 5.36,
       "unit": "اونس",
       "currency": "USD",
-      "timestamp": "2026-11-04T23:59:46Z",
+      "timestamp": "2026-11-04T18:54:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_emami": {
       "id": "coin_emami",
@@ -327,14 +327,14 @@
       "name": "Emami Coin",
       "nameFa": "سکه امامی",
       "category": "coin",
-      "price": 264610000.0,
-      "changePercent": 0.0,
+      "price": 264610000,
+      "changePercent": 1.35,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:58Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_bahar": {
       "id": "coin_bahar",
@@ -342,14 +342,14 @@
       "name": "Bahare Azadi Coin",
       "nameFa": "سکه بهاره آزادی",
       "category": "coin",
-      "price": 255320000.0,
-      "changePercent": 0.0,
+      "price": 255320000,
+      "changePercent": 1.23,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:58Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_half": {
       "id": "coin_half",
@@ -357,14 +357,14 @@
       "name": "Half Coin",
       "nameFa": "نیم سکه",
       "category": "coin",
-      "price": 139660000.0,
-      "changePercent": 0.0,
+      "price": 139660000,
+      "changePercent": 0.74,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T13:59:26Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_quarter": {
       "id": "coin_quarter",
@@ -372,14 +372,14 @@
       "name": "Quarter Coin",
       "nameFa": "ربع سکه",
       "category": "coin",
-      "price": 75490000.0,
-      "changePercent": 0.0,
+      "price": 75490000,
+      "changePercent": 1.15,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T14:44:16Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_gram": {
       "id": "coin_gram",
@@ -387,14 +387,14 @@
       "name": "Gram Gold Coin",
       "nameFa": "سکه گرمی",
       "category": "coin",
-      "price": 38000000.0,
-      "changePercent": 0.0,
+      "price": 38000000,
+      "changePercent": 1.6,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T11:31:06Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_cad": {
       "id": "ir_cad",
@@ -402,14 +402,14 @@
       "name": "Canadian Dollar (Free Market)",
       "nameFa": "دلار کانادا (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 192490.0,
-      "changePercent": 0.0,
+      "price": 192490,
+      "changePercent": -1.51,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_aud": {
       "id": "ir_aud",
@@ -417,14 +417,14 @@
       "name": "Australian Dollar (Free Market)",
       "nameFa": "دلار استرالیا (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 188270.0,
-      "changePercent": 0.0,
+      "price": 188270,
+      "changePercent": -1.27,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_chf": {
       "id": "ir_chf",
@@ -432,14 +432,14 @@
       "name": "Swiss Franc (Free Market)",
       "nameFa": "فرانک سوئیس (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 328860.0,
-      "changePercent": 0.0,
+      "price": 328860,
+      "changePercent": -1.34,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_jpy": {
       "id": "ir_jpy",
@@ -447,14 +447,14 @@
       "name": "Japanese Yen per 100 (Free Market)",
       "nameFa": "ین ژاپن، هر ۱۰۰ ین (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 169815.0,
-      "changePercent": 0.0,
+      "price": 169815,
+      "changePercent": -1.76,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_rub": {
       "id": "ir_rub",
@@ -462,14 +462,14 @@
       "name": "Russian Ruble (Free Market)",
       "nameFa": "روبل روسیه (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 3287.0,
-      "changePercent": 0.0,
+      "price": 3279,
+      "changePercent": -2.59,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_iqd": {
       "id": "ir_iqd",
@@ -478,13 +478,13 @@
       "nameFa": "دینار عراق (بازار آزاد)",
       "category": "iranianCurrency",
       "price": 172.7,
-      "changePercent": 0.0,
+      "changePercent": -1.68,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T14:55:33Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "ir_afn": {
       "id": "ir_afn",
@@ -492,14 +492,14 @@
       "name": "Afghan Afghani (Free Market)",
       "nameFa": "افغانی افغانستان (بازار آزاد)",
       "category": "iranianCurrency",
-      "price": 4196.0,
-      "changePercent": 0.0,
+      "price": 4196,
+      "changePercent": -1.69,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:28:07Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "usdt_irt": {
       "id": "usdt_irt",
@@ -507,14 +507,14 @@
       "name": "Tether in Toman",
       "nameFa": "تتر (تومان) — ۲۴ ساعته",
       "category": "iranianCurrency",
-      "price": 269384.0,
-      "changePercent": 0.0,
+      "price": 269384,
+      "changePercent": 0,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T18:57:26Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "gold_abshodeh": {
       "id": "gold_abshodeh",
@@ -522,14 +522,14 @@
       "name": "Melted Gold (spot)",
       "nameFa": "آبشده نقدی",
       "category": "gold",
-      "price": 112366000.0,
-      "changePercent": 0.0,
+      "price": 112366000,
+      "changePercent": 1.94,
       "unit": "مثقال",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:58Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_emami_retail": {
       "id": "coin_emami_retail",
@@ -537,14 +537,14 @@
       "name": "Emami Coin (retail)",
       "nameFa": "سکه امامی (خرده‌فروشی)",
       "category": "coin",
-      "price": 265610000.0,
-      "changePercent": 0.0,
+      "price": 265610000,
+      "changePercent": 1.34,
       "unit": "عدد",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:58Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_half_bubble": {
       "id": "coin_half_bubble",
@@ -552,14 +552,14 @@
       "name": "Half Coin bubble",
       "nameFa": "حباب نیم سکه",
       "category": "coin",
-      "price": 11799000.0,
-      "changePercent": 0.0,
+      "price": 11799000,
+      "changePercent": -1.65,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "coin_quarter_bubble": {
       "id": "coin_quarter_bubble",
@@ -567,14 +567,14 @@
       "name": "Quarter Coin bubble",
       "nameFa": "حباب ربع سکه",
       "category": "coin",
-      "price": 11557000.0,
-      "changePercent": 0.0,
+      "price": 11557000,
+      "changePercent": 2.18,
       "unit": "تومان",
       "currency": "IRR",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T16:29:57Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "bourse_index": {
       "id": "bourse_index",
@@ -583,13 +583,13 @@
       "nameFa": "شاخص کل بورس",
       "category": "marketIndex",
       "price": 7912741.2,
-      "changePercent": 0.0,
+      "changePercent": 1.13,
       "unit": "واحد",
       "currency": "IDX",
-      "timestamp": "2026-11-03T20:30:00Z",
+      "timestamp": "2026-11-04T13:03:05Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "oil_brent": {
       "id": "oil_brent",
@@ -597,14 +597,14 @@
       "name": "Brent crude",
       "nameFa": "نفت برنت",
       "category": "commodity",
-      "price": 94.62,
-      "changePercent": -0.57,
+      "price": 94.81,
+      "changePercent": -10.1,
       "unit": "بشکه",
       "currency": "USD",
-      "timestamp": "2026-11-04T23:59:49Z",
+      "timestamp": "2026-11-04T18:54:49Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     },
     "oil_wti": {
       "id": "oil_wti",
@@ -613,13 +613,13 @@
       "nameFa": "نفت وست تگزاس",
       "category": "commodity",
       "price": 81.73,
-      "changePercent": 0.0,
+      "changePercent": 0,
       "unit": "بشکه",
       "currency": "USD",
       "timestamp": "2026-07-19T20:30:00Z",
       "source": "TGJU",
-      "status": "LIVE",
-      "confidence": 1.0
+      "status": "STALE",
+      "confidence": 1
     }
   }
 }

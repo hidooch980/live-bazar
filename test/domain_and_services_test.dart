@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:live_bazar/domain/entities/market_snapshot.dart';
 import 'package:live_bazar/domain/entities/price_quote.dart';
 import 'package:live_bazar/services/market_pulse_service.dart';
 import 'package:live_bazar/services/market_score_service.dart';
@@ -26,6 +27,22 @@ PriceQuote _q(
 );
 
 void main() {
+  group('MarketSnapshot', () {
+    test('rejects a missing or malformed timestamp instead of using now', () {
+      expect(
+        () => MarketSnapshot.fromJson({'quotes': <String, dynamic>{}}),
+        throwsFormatException,
+      );
+      expect(
+        () => MarketSnapshot.fromJson({
+          'timestamp': 'not-a-date',
+          'quotes': <String, dynamic>{},
+        }),
+        throwsFormatException,
+      );
+    });
+  });
+
   group('PriceQuote', () {
     test('json roundtrip preserves all fields', () {
       final q = _q('fx_eur', 1.08, changePercent: -1.5);
@@ -49,6 +66,15 @@ void main() {
     test('rejects non-positive prices', () {
       expect(svc.validate(_q('fx_eur', 0)).isValid, isFalse);
       expect(svc.validate(_q('fx_eur', -2)).isValid, isFalse);
+    });
+
+    test('rejects non-finite change metrics and invalid confidence', () {
+      expect(
+        svc.validate(_q('fx_eur', 1.08, changePercent: double.nan)).isValid,
+        isFalse,
+      );
+      final invalidConfidence = _q('fx_eur', 1.08).copyWith(confidence: 1.5);
+      expect(svc.validate(invalidConfidence).isValid, isFalse);
     });
 
     test('rejects unknown asset ids', () {
@@ -99,6 +125,30 @@ void main() {
       );
       expect(
         svc.assess(candidate: next, previousValid: base),
+        AnomalyState.suspicious,
+      );
+    });
+
+    test('rejects a zero candidate before equality shortcuts', () {
+      final zero = _q(
+        'fx_eur',
+        0,
+        ts: base.timestamp.add(const Duration(minutes: 1)),
+      );
+      expect(
+        svc.assess(candidate: zero, previousValid: base),
+        AnomalyState.rejected,
+      );
+    });
+
+    test('timestamp regression is suspicious when price is unchanged', () {
+      final older = _q(
+        'fx_eur',
+        base.price,
+        ts: base.timestamp.subtract(const Duration(minutes: 1)),
+      );
+      expect(
+        svc.assess(candidate: older, previousValid: base),
         AnomalyState.suspicious,
       );
     });
