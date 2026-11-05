@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../app/theme.dart';
 import '../../config/asset_catalog.dart';
@@ -38,44 +39,85 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('بازار مولیدو'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [Text('بازار مولیدو'), _AppVersionLabel()],
+        ),
         actions: [
           IconButton(
-            tooltip: 'اشتراک کارت قیمت',
-            icon: const Icon(Icons.ios_share),
-            onPressed: () => showShareCardSheet(context, ref),
-          ),
-          IconButton(
-            tooltip: 'شخصی‌سازی خانه',
-            icon: const Icon(Icons.tune),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
-            ),
-          ),
-          IconButton(
-            tooltip: 'پورتفولیو',
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const PortfolioScreen())),
-          ),
-          IconButton(
-            tooltip: 'هشدارها',
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const AlertsScreen())),
-          ),
-          IconButton(
-            tooltip: 'به‌روزرسانی',
+            tooltip: 'به‌روزرسانی بازار',
             icon: state.refreshing
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh),
+                : const Icon(Icons.refresh_rounded),
             onPressed: () =>
                 ref.read(marketControllerProvider.notifier).refreshNow(),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'ابزارهای بیشتر',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (value) {
+              switch (value) {
+                case 'share':
+                  showShareCardSheet(context, ref);
+                  break;
+                case 'customize':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CustomizeHomeScreen(),
+                    ),
+                  );
+                  break;
+                case 'portfolio':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PortfolioScreen()),
+                  );
+                  break;
+                case 'alerts':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AlertsScreen()),
+                  );
+                  break;
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'share',
+                child: ListTile(
+                  leading: Icon(Icons.ios_share),
+                  title: Text('اشتراک کارت قیمت'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'customize',
+                child: ListTile(
+                  leading: Icon(Icons.tune),
+                  title: Text('شخصی‌سازی خانه'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'portfolio',
+                child: ListTile(
+                  leading: Icon(Icons.account_balance_wallet_outlined),
+                  title: Text('پورتفولیو'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'alerts',
+                child: ListTile(
+                  leading: Icon(Icons.notifications_outlined),
+                  title: Text('هشدارها'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -177,6 +219,36 @@ class HomeScreen extends ConsumerWidget {
         onToggleFavorite: () =>
             ref.read(watchlistControllerProvider.notifier).toggle(quote.id),
       );
+}
+
+class _AppVersionLabel extends StatefulWidget {
+  const _AppVersionLabel();
+
+  @override
+  State<_AppVersionLabel> createState() => _AppVersionLabelState();
+}
+
+class _AppVersionLabelState extends State<_AppVersionLabel> {
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: _packageInfo,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final info = snapshot.data!;
+        return Text(
+          'نسخه ${info.version.faString}  •  ساخت ${info.buildNumber.faString}',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).hintColor,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {

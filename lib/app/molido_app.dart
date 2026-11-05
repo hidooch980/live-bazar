@@ -34,12 +34,9 @@ class _MolidoAppState extends ConsumerState<MolidoApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Foreground start: immediate refresh + begin the 5s cycle.
     Future<void>.microtask(() async {
       await ref.read(refreshEngineProvider).onForegroundChanged(true);
     });
-    // Auto-update check (GitHub Releases) — once per session, delayed so
-    // the market UI comes first.
     Future<void>.delayed(const Duration(seconds: 8), () async {
       if (!mounted) return;
       final check = await ref.read(updateCheckProvider.future);
@@ -77,6 +74,7 @@ class _MolidoAppState extends ConsumerState<MolidoApp>
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
       locale: const Locale('fa'),
       supportedLocales: const [Locale('fa'), Locale('en')],
       localizationsDelegates: const [
@@ -85,41 +83,44 @@ class _MolidoAppState extends ConsumerState<MolidoApp>
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl, // Persian RTL primary
+        textDirection: TextDirection.rtl,
         child: child ?? const SizedBox.shrink(),
       ),
       home: Scaffold(
         body: IndexedStack(index: _tab, children: _screens),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _tab,
-          onDestinationSelected: (i) => setState(() => _tab = i),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'خانه',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.candlestick_chart_outlined),
-              selectedIcon: Icon(Icons.candlestick_chart),
-              label: 'بازار',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.show_chart_outlined),
-              selectedIcon: Icon(Icons.show_chart),
-              label: 'چارت',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.calculate_outlined),
-              selectedIcon: Icon(Icons.calculate),
-              label: 'ماشین‌حساب',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'تنظیمات',
-            ),
-          ],
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: _tab,
+            onDestinationSelected: (i) => setState(() => _tab = i),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.space_dashboard_outlined),
+                selectedIcon: Icon(Icons.space_dashboard_rounded),
+                label: 'خانه',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.candlestick_chart_outlined),
+                selectedIcon: Icon(Icons.candlestick_chart_rounded),
+                label: 'بازار',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.query_stats_outlined),
+                selectedIcon: Icon(Icons.query_stats_rounded),
+                label: 'نمودارها',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.calculate_outlined),
+                selectedIcon: Icon(Icons.calculate_rounded),
+                label: 'محاسبه',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: 'بیشتر',
+              ),
+            ],
+          ),
         ),
       ),
     );

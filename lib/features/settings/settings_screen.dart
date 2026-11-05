@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../core/network/http_config.dart';
 import '../../core/utils/fa_number.dart';
@@ -11,6 +13,8 @@ import '../../services/home_widget_service.dart';
 import '../../services/timezone_service.dart';
 import '../../state/app_providers.dart';
 import '../home/customize_home_screen.dart';
+import '../alerts/alerts_screen.dart';
+import '../portfolio/portfolio_screen.dart';
 import '../home/home_layout.dart';
 import '../update/update_flow.dart';
 import '../widget_settings/home_widget_config_controller.dart';
@@ -24,10 +28,11 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final timeZone = ref.watch(timeZoneProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('تنظیمات')),
+      appBar: AppBar(title: const Text('بیشتر و تنظیمات')),
       body: ListView(
         children: [
           const SizedBox(height: 8),
+          const _QuickAccessSection(),
           const _Header('درباره'),
           const ListTile(
             leading: Icon(Icons.storefront),
@@ -132,6 +137,84 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => runUpdateFlow(context, ref),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A single, discoverable hub for tools that are not in the primary tabs.
+class _QuickAccessSection extends StatelessWidget {
+  const _QuickAccessSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final entries =
+        <({IconData icon, String title, String subtitle, Widget page})>[
+          (
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'پورتفولیو',
+            subtitle: 'دارایی‌ها و ارزش سبد',
+            page: const PortfolioScreen(),
+          ),
+          (
+            icon: Icons.notifications_active_outlined,
+            title: 'هشدارهای قیمت',
+            subtitle: 'ساخت و مدیریت هشدارها',
+            page: const AlertsScreen(),
+          ),
+          (
+            icon: Icons.dashboard_customize_outlined,
+            title: 'شخصی‌سازی خانه',
+            subtitle: 'چیدمان بخش‌های صفحه اصلی',
+            page: const CustomizeHomeScreen(),
+          ),
+          (
+            icon: Icons.widgets_outlined,
+            title: 'ویجت صفحه اصلی',
+            subtitle: 'نمایش قیمت روی صفحه گوشی',
+            page: const HomeWidgetSettingsScreen(),
+          ),
+        ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'دسترسی سریع',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'ابزارهای اصلی برنامه در یک جا',
+              style: TextStyle(
+                color: Theme.of(context).hintColor,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final entry in entries)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundColor: AppTheme.gold.withValues(alpha: 0.13),
+                  foregroundColor: AppTheme.goldDeep,
+                  child: Icon(entry.icon),
+                ),
+                title: Text(
+                  entry.title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                subtitle: Text(entry.subtitle),
+                trailing: const Icon(Icons.chevron_left),
+                onTap: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (_) => entry.page)),
+              ),
+          ],
+        ),
       ),
     );
   }
