@@ -59,18 +59,22 @@ class HomeScreen extends ConsumerWidget {
               switch (value) {
                 case 'share':
                   showShareCardSheet(context, ref);
+                  break;
                 case 'customize':
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
                   );
+                  break;
                 case 'portfolio':
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const PortfolioScreen()),
                   );
+                  break;
                 case 'alerts':
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const AlertsScreen()),
                   );
+                  break;
               }
             },
             itemBuilder: (_) => const [
