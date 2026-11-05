@@ -13,12 +13,17 @@ on:
         options: [ubuntu-24.04, ubuntu-26.04]
         default: ubuntu-24.04
 
+permissions:
+  contents: write
+
 jobs:
   analyze-test:
     runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
       - uses: actions/setup-java@v6
         with:
@@ -32,6 +37,18 @@ jobs:
 
       - name: Pub get
         run: flutter pub get
+
+      - name: Format and commit Dart sources
+        if: github.event_name == 'pull_request'
+        run: |
+          dart format .
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- '*.dart'
+            git commit -m "chore: format Dart sources"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
+          fi
 
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
