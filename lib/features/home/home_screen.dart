@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../app/theme.dart';
 import '../../config/asset_catalog.dart';
@@ -38,7 +39,14 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('بازار مولیدو'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('بازار مولیدو'),
+            _AppVersionLabel(),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'به‌روزرسانی بازار',
@@ -184,6 +192,36 @@ class HomeScreen extends ConsumerWidget {
         onToggleFavorite: () =>
             ref.read(watchlistControllerProvider.notifier).toggle(quote.id),
       );
+}
+
+class _AppVersionLabel extends StatefulWidget {
+  const _AppVersionLabel();
+
+  @override
+  State<_AppVersionLabel> createState() => _AppVersionLabelState();
+}
+
+class _AppVersionLabelState extends State<_AppVersionLabel> {
+  late final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: _packageInfo,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final info = snapshot.data!;
+        return Text(
+          'نسخه ${info.version.faString}  •  ساخت ${info.buildNumber.faString}',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).hintColor,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _SectionTitle extends StatelessWidget {
