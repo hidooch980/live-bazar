@@ -32,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         children: [
           const SizedBox(height: 8),
+          const _QuickAccessSection(),
           const _Header('درباره'),
           const ListTile(
             leading: Icon(Icons.storefront),
