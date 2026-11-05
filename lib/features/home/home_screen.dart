@@ -41,41 +41,44 @@ class HomeScreen extends ConsumerWidget {
         title: const Text('بازار مولیدو'),
         actions: [
           IconButton(
-            tooltip: 'اشتراک کارت قیمت',
-            icon: const Icon(Icons.ios_share),
-            onPressed: () => showShareCardSheet(context, ref),
-          ),
-          IconButton(
-            tooltip: 'شخصی‌سازی خانه',
-            icon: const Icon(Icons.tune),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
-            ),
-          ),
-          IconButton(
-            tooltip: 'پورتفولیو',
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const PortfolioScreen())),
-          ),
-          IconButton(
-            tooltip: 'هشدارها',
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const AlertsScreen())),
-          ),
-          IconButton(
-            tooltip: 'به‌روزرسانی',
+            tooltip: 'به‌روزرسانی بازار',
             icon: state.refreshing
                 ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh),
+                : const Icon(Icons.refresh_rounded),
             onPressed: () =>
                 ref.read(marketControllerProvider.notifier).refreshNow(),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'ابزارهای بیشتر',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (value) {
+              switch (value) {
+                case 'share':
+                  showShareCardSheet(context, ref);
+                case 'customize':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CustomizeHomeScreen()),
+                  );
+                case 'portfolio':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const PortfolioScreen()),
+                  );
+                case 'alerts':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AlertsScreen()),
+                  );
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'share', child: ListTile(leading: Icon(Icons.ios_share), title: Text('اشتراک کارت قیمت'), contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'customize', child: ListTile(leading: Icon(Icons.tune), title: Text('شخصی‌سازی خانه'), contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'portfolio', child: ListTile(leading: Icon(Icons.account_balance_wallet_outlined), title: Text('پورتفولیو'), contentPadding: EdgeInsets.zero)),
+              PopupMenuItem(value: 'alerts', child: ListTile(leading: Icon(Icons.notifications_outlined), title: Text('هشدارها'), contentPadding: EdgeInsets.zero)),
+            ],
           ),
         ],
       ),
