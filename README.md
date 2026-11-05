@@ -62,6 +62,8 @@ flutter build apk --release     # CI builds releases on tags (v*)
 - [x] Watchlist, price alerts (local + background notifications), portfolio (§22–24)
 - [x] Charts: published daily history + local intraday (§19, §27)
 - [x] ویجت صفحه اصلی اندروید
+- [x] بازطراحی Material 3، ناوبری پنج‌بخشی و مرکز دسترسی سریع ابزارها
+- [x] نمایش خودکار شماره نسخه و شماره ساخت در سربرگ صفحه خانه
 - [ ] MOLIDO MARKET AI modules (V2, never faked in V1) (§32)
 
 ## Disclaimer
