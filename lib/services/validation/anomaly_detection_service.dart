@@ -13,15 +13,22 @@ class AnomalyDetectionService {
     double jumpFraction = AppConstants.anomalyJumpFraction,
   }) {
     final last = previousValid;
-    if (last == null ||
-        candidate.timestamp == last.timestamp ||
-        candidate.price == last.price) {
-      return AnomalyState.valid;
+    // Reject invalid observations before equality/first-sample shortcuts.
+    if (!candidate.price.isFinite || candidate.price <= 0) {
+      return AnomalyState.rejected;
     }
-
-    // Timestamp regression => suspicious.
+    if (last == null) return AnomalyState.valid;
+    // A corrupt baseline must never reach the relative-change division.
+    if (!last.price.isFinite || last.price <= 0) {
+      return AnomalyState.rejected;
+    }
+    // Timestamp regression => suspicious, even when the price is unchanged.
     if (candidate.timestamp.isBefore(last.timestamp)) {
       return AnomalyState.suspicious;
+    }
+    if (candidate.timestamp == last.timestamp ||
+        candidate.price == last.price) {
+      return AnomalyState.valid;
     }
 
     final rel = ((candidate.price - last.price).abs()) / last.price;

@@ -227,6 +227,11 @@ class IranianMarketProvider implements IPriceProvider {
       final published = parseMarketNumber(row['p']);
       if (published == null) continue;
 
+      // Never replace a missing/invalid provider timestamp with HTTP Date or
+      // the local clock. Doing so would make an old observation look LIVE.
+      final publishedAt = tehranToUtc(row['ts']);
+      if (publishedAt == null) continue;
+
       // TGJU publishes Iranian indicators in Rial; the catalog and the whole
       // display path work in Toman. The global ounces are USD as published.
       final divisor = def.currency == 'IRR' ? PriceDisplay.rialPerToman : 1;
@@ -245,7 +250,7 @@ class IranianMarketProvider implements IPriceProvider {
           changePercent: ((row['dp'] as num?)?.toDouble() ?? 0) * sign,
           unit: def.unit,
           currency: def.currency,
-          timestamp: tehranToUtc(row['ts']) ?? fallbackTimestamp,
+          timestamp: publishedAt,
           source: sourceName,
           status: isPreviousClose(row)
               ? QuoteStatus.previousClose

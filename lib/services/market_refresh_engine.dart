@@ -106,7 +106,7 @@ class MarketRefreshEngine {
       // provider covers but did not refresh is carried over from the last
       // snapshot and must stop claiming to be live.
       final refreshed = <String>{};
-      final failedProviders = <IPriceProvider>[];
+      final providersToCheckForStale = <IPriceProvider>[];
 
       final futures = <Future<bool?>>[];
       for (final entry in _providers.entries.where((e) => e.isActive)) {
@@ -126,6 +126,7 @@ class MarketRefreshEngine {
               provider.supportedAssets,
             );
             if (result.isSuccess && result.quotes.isNotEmpty) {
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'ok';
               providerStatus[provider.id] = 'ok';
               for (final q in result.quotes) {
@@ -138,13 +139,16 @@ class MarketRefreshEngine {
                 refreshed.add(q.id);
               }
             } else if (!result.isSuccess) {
-              failedProviders.add(provider);
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'failed';
               providerStatus[provider.id] = 'failed: ${result.error!.message}';
               debugPrint(
                 '[engine] provider ${provider.id} failed: ${result.error!.message}',
               );
             } else {
+              // Empty success is still a missed refresh. Do not leave cached
+              // quotes from this provider falsely marked LIVE.
+              providersToCheckForStale.add(provider);
               sourceStatus[provider.id] = 'empty';
               providerStatus[provider.id] = 'empty';
             }
@@ -160,7 +164,7 @@ class MarketRefreshEngine {
 
       // A quote we could not refresh is STALE — distinct from DELAYED,
       // which means we DID refresh and the source itself is quiet.
-      for (final provider in failedProviders) {
+      for (final provider in providersToCheckForStale) {
         for (final assetId in provider.supportedAssets) {
           if (refreshed.contains(assetId)) continue;
           final carried = merged[assetId];
@@ -223,7 +227,18 @@ class MarketRefreshEngine {
         // The provider may already know this is a previous session's close
         // — its timestamp is a midnight date stamp, so any age derived
         // from it is fiction. Keep that verdict.
-        if (incoming.status == QuoteStatus.previousClose) return q;
+        if (incoming.status == QuoteStatus.previousClose ||
+            incoming.status == QuoteStatus.stale ||
+            incoming.status == QuoteStatus.delayed ||
+            incoming.status == QuoteStatus.fallback ||
+            incoming.status == QuoteStatus.cached ||
+            incoming.status == QuoteStatus.unchanged ||
+            incoming.status == QuoteStatus.dataConflict ||
+            incoming.status == QuoteStatus.unavailable ||
+            incoming.status == QuoteStatus.error ||
+            incoming.status == QuoteStatus.serverRequired) {
+          return q;
+        }
         // Otherwise: this quote WAS just fetched successfully, so it is the
         // newest the source offers. If the source's own publish time is
         // old, the market is closed or the asset is thinly traded — that is

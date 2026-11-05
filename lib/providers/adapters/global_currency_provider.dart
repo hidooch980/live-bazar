@@ -118,9 +118,13 @@ class GlobalCurrencyProvider implements IPriceProvider {
       if (ratesRaw is! Map) return _bad('er-api missing rates');
       final rates = Map<String, dynamic>.from(ratesRaw);
       final epochUnix = (body?['time_last_update_unix'] as num?)?.toInt();
-      var ts = epochUnix == null
-          ? (_serverTime(res) ?? DateTime.now().toUtc())
-          : DateTime.fromMillisecondsSinceEpoch(epochUnix * 1000, isUtc: true);
+      if (epochUnix == null || epochUnix <= 0) {
+        return _bad('er-api missing source update timestamp');
+      }
+      final ts = DateTime.fromMillisecondsSinceEpoch(
+        epochUnix * 1000,
+        isUtc: true,
+      );
       // rates: units of X per 1 USD -> invert for USD-per-X.
       final usdPerUnit = <String, double>{};
       rates.forEach((k, v) {
@@ -154,10 +158,9 @@ class GlobalCurrencyProvider implements IPriceProvider {
       if (ratesRaw is! Map) return _bad('jsdelivr missing usd map');
       final rates = Map<String, dynamic>.from(ratesRaw);
       final dateStr = body?['date'];
-      var ts = _serverTime(res) ?? DateTime.now().toUtc();
-      if (dateStr is String) {
-        ts = DateTime.tryParse(dateStr)?.toUtc() ?? ts;
-      }
+      if (dateStr is! String) return _bad('jsdelivr missing source date');
+      final ts = DateTime.tryParse(dateStr)?.toUtc();
+      if (ts == null) return _bad('jsdelivr invalid source date');
       // rates: units of X per 1 USD -> invert for USD-per-X.
       final usdPerUnit = <String, double>{};
       rates.forEach((k, v) {
@@ -191,10 +194,9 @@ class GlobalCurrencyProvider implements IPriceProvider {
       if (ratesRaw is! Map) return _bad('frankfurter missing rates');
       final rates = Map<String, dynamic>.from(ratesRaw);
       final dateStr = body?['date'];
-      var ts = _serverTime(res) ?? DateTime.now().toUtc();
-      if (dateStr is String) {
-        ts = DateTime.tryParse(dateStr)?.toUtc() ?? ts;
-      }
+      if (dateStr is! String) return _bad('frankfurter missing source date');
+      final ts = DateTime.tryParse(dateStr)?.toUtc();
+      if (ts == null) return _bad('frankfurter invalid source date');
       final usdPerUnit = <String, double>{};
       rates.forEach((k, v) {
         final r = (v as num?)?.toDouble();
@@ -238,7 +240,7 @@ class GlobalCurrencyProvider implements IPriceProvider {
       } else {
         price = usdPerUnit[code];
       }
-      if (price == null || price <= 0) continue;
+      if (price == null || !price.isFinite || price <= 0) continue;
       final def = AssetCatalog.byId(entry.key)!;
       quotes.add(
         PriceQuote(
@@ -284,7 +286,4 @@ class GlobalCurrencyProvider implements IPriceProvider {
       cause: e,
     ),
   );
-
-  DateTime? _serverTime(Response<dynamic> res) =>
-      DateTime.tryParse(res.headers.value('date') ?? '')?.toUtc();
 }
