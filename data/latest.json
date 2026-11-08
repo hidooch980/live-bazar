@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-08T15:24:57Z",
+  "timestamp": "2026-11-08T19:49:00Z",
   "source": "github-actions-static-snapshot",
   "status": "SNAPSHOT",
   "quotes": {
@@ -9,11 +9,11 @@
       "name": "Bitcoin",
       "nameFa": "بیت‌کوین",
       "category": "crypto",
-      "price": 75932,
-      "changePercent": 0.15717881049550625,
+      "price": 75834,
+      "changePercent": 0.17434706356585733,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-08T15:24:33Z",
+      "timestamp": "2026-11-08T19:48:18Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -24,11 +24,11 @@
       "name": "Ethereum",
       "nameFa": "اتریوم",
       "category": "crypto",
-      "price": 2235.99,
-      "changePercent": -0.23754634528653917,
+      "price": 2230.52,
+      "changePercent": -0.06989134763628904,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-08T15:24:43Z",
+      "timestamp": "2026-11-08T19:48:08Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -39,11 +39,11 @@
       "name": "Tether",
       "nameFa": "تتر",
       "category": "crypto",
-      "price": 0.998988,
-      "changePercent": -0.018784302323564647,
+      "price": 0.999039,
+      "changePercent": -0.020162936606567296,
       "unit": "",
       "currency": "USD",
-      "timestamp": "2026-11-08T15:24:43Z",
+      "timestamp": "2026-11-08T19:48:18Z",
       "source": "CoinGecko",
       "status": "LIVE",
       "confidence": 1.0
@@ -168,7 +168,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_eur": {
@@ -183,7 +183,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:58:07Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_aed": {
@@ -198,7 +198,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:58Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_gbp": {
@@ -213,7 +213,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:58:07Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_try": {
@@ -243,7 +243,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:50Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "gold_18k": {
@@ -258,7 +258,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:55Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "gold_24k": {
@@ -273,7 +273,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:55Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "mesghal": {
@@ -288,7 +288,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "xau_usd": {
@@ -333,7 +333,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_bahar": {
@@ -348,7 +348,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_half": {
@@ -378,7 +378,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:56:41Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_gram": {
@@ -408,7 +408,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:58:03Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_aud": {
@@ -423,7 +423,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:58:02Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_chf": {
@@ -438,7 +438,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:56Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_jpy": {
@@ -453,7 +453,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:56Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_rub": {
@@ -468,7 +468,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:56Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "ir_iqd": {
@@ -498,7 +498,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:58Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "usdt_irt": {
@@ -513,7 +513,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:52Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "gold_abshodeh": {
@@ -528,7 +528,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_emami_retail": {
@@ -543,7 +543,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:57Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_half_bubble": {
@@ -558,7 +558,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:55Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "coin_quarter_bubble": {
@@ -573,7 +573,7 @@
       "currency": "IRR",
       "timestamp": "2026-11-08T14:57:55Z",
       "source": "TGJU",
-      "status": "LIVE",
+      "status": "STALE",
       "confidence": 1.0
     },
     "bourse_index": {
